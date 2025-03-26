@@ -6,24 +6,61 @@
     <title>Exámenes tipo test 1º SMR</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
+        :root {
+            --primary-color: #2575fc;
+            --secondary-color: #2575fc;
+            --bg-color: rgba(255, 255, 255, 0.1);
+            --text-color: #fff;
+            --button-bg: rgba(255, 255, 255, 0.2);
+            --button-hover: rgba(255, 255, 255, 0.3);
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --menu-bg: rgba(40, 40, 40, 0.95);
+            --menu-border: rgba(255, 255, 255, 0.1);
+            --select-bg: rgba(255, 255, 255, 0.9);
+            --select-text: #333;
+        }
+
+        .dark-theme {
+            --primary-color: #000000;
+            --secondary-color: #1E88E5;
+            --bg-color: rgba(30, 30, 30, 0.95);
+            --text-color: #f0f0f0;
+            --button-bg: rgba(60, 60, 60, 0.8);
+            --button-hover: rgba(90, 90, 90, 0.8);
+            --menu-bg: rgba(20, 20, 20, 0.98);
+            --menu-border: rgba(255, 255, 255, 0.05);
+            --select-bg: rgba(50, 50, 50, 0.9);
+            --select-text: #f0f0f0;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: #fff;
+            background: var(--primary-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
+            transition: all 0.5s ease;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
+
+        .dark-theme body {
+            background: #000000;
+        }
+
         .container {
             max-width: 600px;
             width: 90%;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-color);
             border-radius: 15px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
@@ -31,178 +68,248 @@
             margin: 20px 0;
             transition: all 0.5s ease;
             animation: fadeIn 1s ease;
+            overflow-y: auto;
+            max-height: 90vh;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
+
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-20px); }
+        }
+
+        @keyframes slideUpFromBottom {
+            from { opacity: 0; transform: translateY(100%); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDownToBottom {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(100%); }
+        }
+
         @keyframes welcomeAnimation {
             0% { opacity: 0; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1); }
         }
+
         @keyframes expandAnimation {
             0% { transform: scale(0.9); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        @keyframes shrinkAnimation {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0; }
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
         .exam-button, #startScreen button {
             margin: 10px;
             padding: 15px 30px;
             font-size: 16px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border: none;
             border-radius: 10px;
-            color: #fff;
+            color: var(--text-color);
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            -webkit-font-smoothing: antialiased;
         }
+
         .exam-button:hover, #startScreen button:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--button-hover);
+            transform: scale(1.05);
         }
+
         #startScreen, #quizContainer, #result, #loadingScreen {
             display: none;
         }
+
         .question-container {
             margin-bottom: 20px;
         }
+
         .question-container label {
             display: block;
             margin: 10px 0;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--button-bg);
             border-radius: 10px;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
+
         .question-container label:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-hover);
+            transform: scale(1.02);
         }
+
         .question-container input[type="radio"]:checked + label {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--button-hover);
         }
+
         .buttons {
             display: flex;
             justify-content: space-between;
             margin-top: 20px;
         }
+
         .buttons button {
             padding: 10px 20px;
             font-size: 16px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border: none;
             border-radius: 10px;
-            color: #fff;
+            color: var(--text-color);
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
+
         .buttons button:disabled {
-            background: rgba(255, 255, 255, 0.1);
+            opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
         }
-        .buttons button:hover {
-            background: rgba(255, 255, 255, 0.3);
+
+        .buttons button:hover:not(:disabled) {
+            background: var(--button-hover);
+            transform: scale(1.05);
         }
+
         #progressBar {
             width: 100%;
             height: 10px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border-radius: 5px;
             margin-bottom: 20px;
         }
+
         #progress {
             height: 100%;
-            background: #fff;
+            background: var(--text-color);
             border-radius: 5px;
             width: 0;
             transition: width 0.3s ease;
         }
+
         .floating-button {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border: none;
             border-radius: 50%;
             width: 50px;
             height: 50px;
-            color: #fff;
+            color: var(--text-color);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            z-index: 100;
         }
-        .floating-button:disabled {
-            background: rgba(255, 255, 255, 0.1);
-            cursor: not-allowed;
-        }
-        .floating-button:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.3);
-        }
+
         .floating-button.left {
             right: auto;
             left: 20px;
         }
+
+        .floating-button:hover {
+            background: var(--button-hover);
+            transform: scale(1.1);
+        }
+
         #result {
             text-align: left;
             max-height: 400px;
             overflow-y: auto;
             padding: 10px;
         }
+
         #result ul {
             list-style: none;
             padding: 0;
         }
+
         #result li {
             margin: 10px 0;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--button-bg);
             border-radius: 10px;
+            transition: all 0.3s ease;
+            color: var(--text-color);
         }
+
+        #result li:hover {
+            transform: scale(1.01);
+        }
+
+        .correct-answer {
+            color: var(--text-color) !important;
+        }
+
+        .incorrect-answer {
+            color: var(--text-color) !important;
+        }
+
         .welcome-message {
             font-size: 24px;
             font-weight: bold;
             animation: welcomeAnimation 1s ease;
         }
+
         #loadingScreen {
             text-align: center;
         }
+
         #loadingScreen .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
+            border-top: 4px solid var(--text-color);
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
+
         #loadingScreen .progress-bar {
             width: 100%;
             height: 10px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border-radius: 5px;
             margin: 20px 0;
             overflow: hidden;
         }
+
         #loadingScreen .progress-bar .progress {
             height: 100%;
-            background: #fff;
+            background: var(--text-color);
             border-radius: 5px;
             width: 0;
             transition: width 0.5s ease;
         }
+
         #loadingScreen .messages {
             margin-top: 20px;
             font-size: 14px;
             color: rgba(255, 255, 255, 0.8);
         }
+
         .top-buttons {
             position: fixed;
             top: 20px;
@@ -210,57 +317,331 @@
             right: 20px;
             display: flex;
             justify-content: space-between;
+            z-index: 100;
         }
+
         .top-buttons a {
             padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border-radius: 10px;
-            color: #fff;
+            color: var(--text-color);
             text-decoration: none;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
+
         .top-buttons a:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--button-hover);
+            transform: scale(1.05);
         }
+
         .category-menu {
             display: none;
-            animation: slideIn 0.5s ease;
+            animation: slideIn 0.3s ease forwards;
         }
+
+        .category-menu.closing {
+            animation: slideOut 0.3s ease forwards;
+        }
+
         .category-menu.active {
             display: block;
         }
+
         .start-buttons {
             display: flex;
             justify-content: space-between;
             margin-top: 20px;
         }
+
         .start-buttons button {
             padding: 10px 20px;
             font-size: 16px;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--button-bg);
             border: none;
             border-radius: 10px;
-            color: #fff;
+            color: var(--text-color);
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
+
         .start-buttons button:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--button-hover);
+            transform: scale(1.05);
+        }
+
+        /* Config Menu Styles */
+        .config-menu {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background: var(--bg-color);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--menu-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 99;
+            transform-origin: left bottom;
+            animation: slideUpFromBottom 0.3s ease forwards;
+            max-width: 250px;
+            overflow-y: auto;
+            max-height: 60vh;
+            backdrop-filter: blur(10px);
+        }
+
+        .config-menu.closing {
+            animation: slideDownToBottom 0.3s ease forwards;
+        }
+
+        .config-menu.active {
+            display: flex;
+        }
+
+        .config-menu label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .config-menu select {
+            background: var(--select-bg);
+            color: var(--select-text);
+            border: 1px solid var(--menu-border);
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .config-menu select:hover {
+            background: var(--button-hover);
+        }
+
+        .config-menu button {
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .config-menu button:hover {
+            background: var(--button-hover);
+            transform: scale(1.02);
+        }
+
+        /* Login section in config menu */
+        .login-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--menu-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .login-status {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-color);
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .google-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #4285F4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .google-login-btn:hover {
+            background: #357ABD;
+            transform: scale(1.02);
+        }
+
+        .google-login-btn i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        /* Results Menu Styles */
+        .results-menu {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: var(--bg-color);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--menu-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 99;
+            animation: slideIn 0.3s ease forwards;
+            backdrop-filter: blur(10px);
+        }
+
+        .results-menu.closing {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        .results-menu.active {
+            display: flex;
+        }
+
+        .results-menu h3 {
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid var(--menu-border);
+            padding-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        .exam-result {
+            background: var(--button-bg);
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .exam-result:hover {
+            background: var(--button-hover);
+            transform: scale(1.01);
+        }
+
+        .exam-result p {
+            margin: 5px 0;
+            color: var(--text-color);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .results-menu button {
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .results-menu button:hover {
+            background: var(--button-hover);
+            transform: scale(1.05);
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-color);
+            z-index: 90;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .logout-btn {
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: var(--button-hover);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 500px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            .exam-button, #startScreen button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .top-buttons a {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .config-menu, .results-menu {
+                max-width: 250px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="top-buttons">
-        <a href="https://moodle.educarex.es/evex/course/view.php?id=4374" target="_blank">Redes Locales - 1º SMR</a>
+        <a id="resultsButton" href="#">Resultados de Exámenes</a>
         <a href="https://www.youtube.com/@tecno-experimentosyretro8212" target="_blank">Mi canal de YouTube</a>
     </div>
+
     <div class="container">
         <!-- Menú principal -->
         <div id="examMenu">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                <span id="userName"></span>
+                <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+            </div>
             <h1>Exámenes tipo test 1º SMR</h1>
             <h2>Selecciona una categoría de exámenes</h2>
             <button class="exam-button" onclick="loadCategory('SOM')">Exámenes SOM</button>
             <button class="exam-button" onclick="loadCategory('RL')">Exámenes RL</button>
+            <button class="exam-button" onclick="loadCategory('SI')">Exámenes SI</button>
+            <button class="exam-button" onclick="loadCategory('IPEI')">Exámenes IPEI</button>
+            <button class="exam-button" onclick="loadCategory('IP')">Exámenes IP</button>
         </div>
 
         <!-- Exámenes SOM -->
@@ -277,6 +658,31 @@
             <button class="exam-button" onclick="loadExam('RLFacil')">Examen Fácil</button>
             <button class="exam-button" onclick="loadExam('RLIntermedio')">Examen Intermedio</button>
             <button class="exam-button" onclick="loadExam('RLDificil')">Examen Difícil</button>
+            <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
+        </div>
+
+        <!-- Exámenes SI -->
+        <div id="SI" class="category-menu">
+            <h2>Exámenes de Sistemas Informáticos (SI)</h2>
+            <button class="exam-button" onclick="loadExam('SIBasico')">Examen Básico</button>
+            <button class="exam-button" onclick="loadExam('SIGestionUsuarios')">Gestión de Usuarios</button>
+            <button class="exam-button" onclick="loadExam('SIComandosAvanzados')">Comandos Avanzados</button>
+            <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
+        </div>
+
+        <!-- Exámenes IPEI -->
+        <div id="IPEI" class="category-menu">
+            <h2>Exámenes de IPEI</h2>
+            <button class="exam-button" onclick="loadExam('IPEIFacil')">Examen Fácil</button>
+            <button class="exam-button" onclick="loadExam('IPEIIntermedio')">Examen Intermedio</button>
+            <button class="exam-button" onclick="loadExam('IPEIDificil')">Examen Difícil</button>
+            <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
+        </div>
+
+        <!-- Exámenes IP -->
+        <div id="IP" class="category-menu">
+            <h2>Exámenes de Vocabulario (IP)</h2>
+            <button class="exam-button" onclick="loadExam('IPVocabulario')">Examen de Vocabulario</button>
             <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
         </div>
 
@@ -323,14 +729,47 @@
 
     <!-- Botones flotantes -->
     <button class="floating-button" onclick="location.reload()"><i class="fas fa-home"></i></button>
-    <button class="floating-button left" id="restartButton" onclick="restartExam()" disabled><i class="fas fa-redo"></i></button>
+    <button class="floating-button left" id="configButton"><i class="fas fa-cog"></i></button>
 
-    <!-- Texto inferior -->
-    <div style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-weight: bold;">
+    <!-- Menú de configuración -->
+    <div class="config-menu" id="configMenu">
+        <label>
+            <input type="checkbox" id="shuffleAnswers" checked> Mezclar respuestas
+        </label>
+        
+        <label for="themeSelect">Tema:</label>
+        <select id="themeSelect">
+            <option value="blue">Azul (Predeterminado)</option>
+            <option value="dark">Oscuro</option>
+        </select>
+        
+        <button onclick="resetSettings()">Restablecer Configuración</button>
+        
+        <!-- Sección de login -->
+        <div class="login-section" id="loginSection">
+            <div id="loginStatus" class="login-status" style="display: none;">
+                <i class="fas fa-check-circle"></i> Sesión iniciada
+            </div>
+            <div id="googleLoginContainer"></div>
+        </div>
+        
+        <button onclick="closeConfigMenu()">Cerrar</button>
+    </div>
+
+    <!-- Menú de resultados -->
+    <div class="results-menu" id="resultsMenu">
+        <h3>Historial de Exámenes</h3>
+        <div id="resultsList"></div>
+        <button onclick="clearAllResults()">Borrar todo</button>
+        <button onclick="closeResultsMenu()">Cerrar</button>
+    </div>
+
+    <div class="footer">
         By © Adrián Blanco Barra 2025
     </div>
 
     <script>
+        // Objeto con todos los exámenes completos
         const exams = {
             // Exámenes SOM (Comandos de Linux)
             SOMIntermedio: {
@@ -403,7 +842,7 @@
                     },
                     { 
                         text: "¿Qué comando se utiliza para buscar archivos que terminen en un número en el directorio /sbin?", 
-                        options: ["ls /sbin/*[0-9]", "find /sbin -name '*[0-9]'", "grep /sbin '*[0-9]'", "search /sbin '*[0-9]'"], 
+                        options: ["ls /sbin/*[0-9]", "find /bin -name '*[0-9]'", "grep /bin '*[0-9]'", "search /bin '*[0-9]'"], 
                         correct: 0
                     },
                     { 
@@ -513,104 +952,99 @@
                 description: "Examen intermedio de redes.",
                 questions: [
                     { 
-                        text: "¿Cuál de las siguientes funciones NO es una función básica de la capa de red?", 
-                        options: ["Encapsulamiento", "Direccionamiento de terminales", "Traducción de nombres de dominio", "Routing"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "Una dirección IPv4 consta de:", 
-                        options: ["16 bits", "32 bits", "64 bits", "128 bits"], 
+                        text: "¿Qué es el subnetting?", 
+                        options: ["La unión de varias redes en una sola", "La subdivisión de una red grande en redes más pequeñas", "El proceso de encriptar direcciones IP", "La conversión de direcciones IPv4 a IPv6"], 
                         correct: 1
                     },
                     { 
-                        text: "La dirección de red de un host se determina mediante:", 
-                        options: ["La operación OR entre la dirección IP y la máscara", "La suma de la dirección IP y la máscara", "La operación AND entre la dirección IP y la máscara", "La resta de la máscara a la dirección IP"], 
-                        correct: 2
+                        text: "¿Cuál es uno de los objetivos principales del subnetting?", 
+                        options: ["Aumentar la cantidad de direcciones IP públicas", "Optimizar el uso de direcciones IP y reducir el tráfico de broadcast", "Eliminar la necesidad de routers", "Convertir direcciones en formato binario"], 
+                        correct: 1
                     },
                     { 
-                        text: "La notación CIDR /24 equivale a la máscara:", 
-                        options: ["255.255.255.0", "255.255.0.0", "255.0.0.0", "255.255.255.255"], 
+                        text: "En el subnetting, ¿qué significa 'tomar prestados' bits?", 
+                        options: ["Utilizar bits de la porción de red para aumentar el número de hosts", "Utilizar bits de la porción de host para crear subredes", "Transferir bits entre diferentes protocolos", "Copiar bits de una dirección IP a otra"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Si se tiene la red 192.168.1.0/24 y se desea dividir en 4 subredes de igual tamaño, ¿cuál será la nueva máscara?", 
+                        options: ["/25", "/26", "/27", "/28"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué representa la parte 'host' en una dirección IP?", 
+                        options: ["La identificación única del dispositivo en la subred", "La dirección del router", "El segmento de la dirección que indica la red", "La suma de todas las subredes disponibles"], 
                         correct: 0
                     },
                     { 
-                        text: "Dentro del rango de direcciones privadas de clase A se encuentra:", 
-                        options: ["192.168.1.0 – 192.168.255.255", "10.0.0.0 – 10.255.255.255", "128.0.0.0 – 191.255.255.255", "224.0.0.0 – 239.255.255.255"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "El protocolo IPv4 se caracteriza por ser:", 
-                        options: ["Orientado a la conexión y garantizar la entrega de paquetes", "Sin conexión y ofrecer servicio mínimo", "Independiente de los medios pero garantizando la fiabilidad", "Exclusivo para redes locales"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "La dirección utilizada comúnmente para el loopback es:", 
-                        options: ["192.168.0.1", "169.254.0.1", "127.0.0.1", "10.0.0.1"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "El rango de direcciones reservado para tráfico multicast (clase D) es:", 
-                        options: ["224.0.0.0 a 239.255.255.255", "192.168.0.0 a 192.168.255.255", "240.0.0.0 a 255.255.255.255", "128.0.0.0 a 191.255.255.255"], 
+                        text: "En el ejemplo del instituto, ¿cuál es una posible división al aplicar subnetting a 192.168.1.0/24?", 
+                        options: ["192.168.1.0/26, 192.168.1.64/26, 192.168.1.128/26, 192.168.1.192/26", "192.168.1.0/25 y 192.168.1.128/25", "192.168.1.0/27, 192.168.1.32/27, 192.168.1.64/27, 192.168.1.96/27", "192.168.1.0/28, 192.168.1.16/28, 192.168.1.32/28, 192.168.1.48/28"], 
                         correct: 0
                     },
                     { 
-                        text: "Para enviar un paquete a una red diferente, un host utiliza:", 
-                        options: ["La dirección de broadcast", "La puerta de enlace predeterminada", "La dirección de loopback", "La dirección de red"], 
+                        text: "¿Cuál es la principal ventaja de segmentar una red mediante subnetting?", 
+                        options: ["Aumenta la velocidad de los enlaces físicos", "Reduce la cantidad de tráfico de broadcast en cada subred", "Permite el uso exclusivo de direcciones IPv6", "Elimina la necesidad de máscaras de subred"], 
                         correct: 1
                     },
                     { 
-                        text: "La dirección de broadcast en una red es:", 
-                        options: ["La primera dirección de la red", "La dirección que identifica a un host específico", "La última dirección de la red, con todos los bits de host en 1", "Una dirección reservada para pruebas"], 
+                        text: "Una vez aplicados los bits de subred a la máscara inicial, ¿qué información se debe calcular para cada subred?", 
+                        options: ["Dirección de red, dirección de broadcast, rango de IP's para host y cantidad de IP's disponibles", "La velocidad de transmisión", "La dirección MAC de cada dispositivo", "El número de VLANs necesarias"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál de las siguientes opciones NO es un beneficio del subnetting?", 
+                        options: ["Optimización del uso de direcciones IP", "Mejora en la seguridad al aislar segmentos de red", "Incremento del tráfico de broadcast", "Mejor administración de la red"], 
                         correct: 2
                     },
                     { 
-                        text: "La función principal de la máscara de subred es:", 
-                        options: ["Identificar la dirección de broadcast", "Dividir la dirección IP en partes de red y de host", "Convertir la dirección IP de decimal a binario", "Configurar la dirección IP en un router"], 
+                        text: "¿Qué efecto tiene el subnetting en el dominio de broadcast de una red?", 
+                        options: ["Lo amplía", "Lo reduce", "Lo elimina", "No tiene ningún efecto"], 
                         correct: 1
                     },
                     { 
-                        text: "El comando utilizado para pasar del modo usuario al modo privilegiado en un router es:", 
-                        options: ["configure terminal", "enable", "hostname", "copy running-config startup-config"], 
+                        text: "En el proceso de subnetting, ¿qué se entiende por 'máscara de red ampliada'?", 
+                        options: ["La máscara original sin modificaciones", "La nueva máscara que resulta al sumar los bits prestados", "La conversión de la máscara a formato hexadecimal", "La máscara que se utiliza para el enrutamiento inter-VLAN"], 
                         correct: 1
                     },
                     { 
-                        text: "La función principal de un router en la capa de red es:", 
-                        options: ["Convertir direcciones IP a direcciones MAC", "Encapsular datos en tramas", "Determinar la ruta de los paquetes a través de la red", "Configurar la red local"], 
-                        correct: 2
+                        text: "Cuando se aplica subnetting, ¿qué se debe verificar en base a los cálculos realizados?", 
+                        options: ["Verificar que la suma de bits de subred y host sea igual a 32 y que el número resultante de hosts por subred sea mayor que cero", "Confirmar que se está usando la versión correcta de IPv6", "Comprobar que la dirección de loopback está incluida en cada subred", "Verificar que no se hayan tomado prestados bits de la parte de red"], 
+                        correct: 0
                     },
                     { 
-                        text: "El comando “login local” en la configuración de un router significa que:", 
-                        options: ["Se permite el acceso sin contraseña", "Se utilizan las cuentas definidas localmente en el dispositivo para autenticación", "Se utiliza la contraseña de la consola", "Se deshabilita la autenticación"], 
+                        text: "En un escenario de router-on-a-stick, ¿cuál es la importancia de la encapsulación dot1Q en las subinterfaces del router?", 
+                        options: ["Permite asignar direcciones IP de forma dinámica", "Identifica y etiqueta el tráfico de cada VLAN para que el router pueda distinguirlo", "Aumenta la velocidad de la red al reducir el tamaño de las tramas", "Convierte el tráfico multicast en unicast"], 
                         correct: 1
                     },
                     { 
-                        text: "La máscara /16 equivale a:", 
-                        options: ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.255"], 
+                        text: "Comparando enrutamiento tradicional e inter-VLAN mediante router-on-a-stick, ¿cuál es una de las principales desventajas del método tradicional?", 
+                        options: ["Requiere múltiples interfaces físicas en el router, lo que incrementa el costo y la complejidad", "No permite la segmentación de la red", "Utiliza encapsulación dot1Q de forma ineficiente", "Solo es aplicable a redes pequeñas"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En la configuración de enrutamiento inter-VLAN, ¿por qué es imprescindible habilitar la interfaz física del router con el comando 'no shutdown'?", 
+                        options: ["Porque las subinterfaces heredan el estado de la interfaz física y si está deshabilitada, no se transmite tráfico", "Para evitar conflictos en la tabla ARP", "Para activar la encriptación en las subinterfaces", "Porque el comando 'no shutdown' configura automáticamente las direcciones IP"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Al dividir una red utilizando máscaras de subred de tamaño fijo, ¿cuál es la principal limitación de esta técnica?", 
+                        options: ["No permite variabilidad en el número de hosts por subred, lo que puede resultar en desperdicio de direcciones", "Incrementa el tráfico de broadcast", "Solo es aplicable a redes IPv6", "Exige el uso de protocolos de encriptación avanzados"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En el Ejemplo 1, ¿cómo se determina el rango de IP's asignables a hosts en cada subred?", 
+                        options: ["Restando la dirección de red y de broadcast del total de direcciones en la subred", "Sumando 2 a la dirección de red", "Multiplicando el número de bits de host por 2", "Dividiendo el número total de direcciones entre el número de subredes"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Si se tuviera que diseñar una red para 50 hosts utilizando subnetting, ¿cuál de las siguientes máscaras sería la más adecuada para evitar desperdicios excesivos?", 
+                        options: ["/24", "/26", "/28", "/30"], 
                         correct: 1
                     },
                     { 
-                        text: "Si se tiene la IP 192.168.10.20/24, la dirección de red es:", 
-                        options: ["192.168.10.20", "192.168.10.1", "192.168.10.0", "192.168.10.255"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "Con la IP 192.168.10.20/24, la dirección de broadcast es:", 
-                        options: ["192.168.10.1", "192.168.10.254", "192.168.10.20", "192.168.10.255"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "En una red con máscara /24, el número de hosts asignables es:", 
-                        options: ["256", "254", "128", "62"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Para guardar la configuración actual de un router y que persista tras un reinicio se usa:", 
-                        options: ["copy startup-config running-config", "copy running-config startup-config", "show running-config", "write memory"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "El comando “show ip interface brief” en un router sirve para:", 
-                        options: ["Mostrar la configuración de seguridad del dispositivo", "Ofrecer un resumen rápido de las interfaces y su estado operativo", "Mostrar la tabla de enrutamiento", "Visualizar las configuraciones guardadas"], 
-                        correct: 1
+                        text: "En un escenario en el que se requiere enrutamiento inter-VLAN, ¿qué ventajas ofrece la configuración 'router-on-a-stick' frente a la configuración tradicional?", 
+                        options: ["Menor costo en equipos al requerir solo una interfaz física para múltiples VLAN y una configuración más sencilla", "Mayor ancho de banda dedicado a cada VLAN", "Eliminación completa de la necesidad de subinterfaces", "Configuración automática sin necesidad de comandos manuales"], 
+                        correct: 0
                     }
                 ]
             },
@@ -618,115 +1052,1019 @@
                 description: "Examen difícil de redes.",
                 questions: [
                     { 
-                        text: "Se tiene una dirección IP de clase B (por ejemplo, 172.16.45.10) configurada con máscara 255.255.0.0. ¿Qué consecuencia tendría configurar erróneamente una máscara /15 en lugar de /16?", 
-                        options: ["La red abarcará más hosts de lo previsto", "La dirección se considerará de clase C", "La IP “invadirá” otras redes, generando conflictos de enrutamiento", "No afectaría, ya que /15 y /16 son equivalentes en clase B"], 
+                        text: "Para dividir la red 192.168.10.0/24 en 4 subredes de igual tamaño, ¿cuál es el proceso correcto para determinar la nueva máscara y el número de hosts por subred?", 
+                        options: ["Tomar 1 bit para subredes y usar máscara /25, resultando en 126 hosts por subred", "Tomar 2 bits para subredes, resultando en máscara /26 y 62 hosts útiles por subred", "Tomar 3 bits para subredes, resultando en máscara /27 y 30 hosts útiles por subred", "Tomar 4 bits para subredes, resultando en máscara /28 y 14 hosts útiles por subred"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "En el proceso de cálculo de subredes, ¿cuál es la fórmula utilizada para determinar el número mínimo de bits necesarios para crear 'N' subredes?", 
+                        options: ["2ⁿ ≥ N", "2ⁿ = N + 1", "2ⁿ ≤ N", "2ⁿ ≥ N + 2"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En el Ejemplo 2 se desea dividir la red 172.48.15.0/16 en 120 subredes. ¿Cuántos bits se deben tomar prestados para alcanzar este número de subredes?", 
+                        options: ["6 bits", "7 bits", "8 bits", "9 bits"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Para la red del Ejemplo 2, tras tomar 7 bits para subredes, ¿cuál es la nueva máscara resultante?", 
+                        options: ["/22", "/23", "/24", "/25"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Si en una subred se utiliza una máscara /23, ¿cuál es el número total de direcciones disponibles y cuántas son asignables a hosts?", 
+                        options: ["512 totales, 510 asignables", "510 totales, 508 asignables", "256 totales, 254 asignables", "1024 totales, 1022 asignables"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En el Ejemplo 2, además de calcular direcciones de red, broadcast y rango de IP's, se menciona el cálculo de direcciones desperdiciadas. ¿Cuál es la razón principal de estas 'direcciones desperdiciadas'?", 
+                        options: ["La diferencia entre el número máximo de subredes posibles y el número de subredes requeridas", "La conversión de la máscara a formato binario", "La duplicación de direcciones en el proceso de enrutamiento", "El uso de direcciones reservadas para el enrutamiento inter-VLAN"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En el proceso de subnetting, ¿qué implica 'corroborar que, en base a los cálculos, se pueden crear las subredes necesarias'?", 
+                        options: ["Verificar que la suma de bits de subred y host sea igual a 32 y que el número resultante de hosts por subred sea mayor que cero", "Confirmar que se está usando la versión correcta de IPv6", "Comprobar que la dirección de loopback está incluida en cada subred", "Verificar que no se hayan tomado prestados bits de la parte de red"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En un escenario de router-on-a-stick, ¿cuál es la importancia de la encapsulación dot1Q en las subinterfaces del router?", 
+                        options: ["Permite asignar direcciones IP de forma dinámica", "Identifica y etiqueta el tráfico de cada VLAN para que el router pueda distinguirlo", "Aumenta la velocidad de la red al reducir el tamaño de las tramas", "Convierte el tráfico multicast en unicast"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Comparando enrutamiento tradicional e inter-VLAN mediante router-on-a-stick, ¿cuál es una de las principales desventajas del método tradicional?", 
+                        options: ["Requiere múltiples interfaces físicas en el router, lo que incrementa el costo y la complejidad", "No permite la segmentación de la red", "Utiliza encapsulación dot1Q de forma ineficiente", "Solo es aplicable a redes pequeñas"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En la configuración de enrutamiento inter-VLAN, ¿por qué es imprescindible habilitar la interfaz física del router con el comando 'no shutdown'?", 
+                        options: ["Porque las subinterfaces heredan el estado de la interfaz física y si está deshabilitada, no se transmite tráfico", "Para evitar conflictos en la tabla ARP", "Para activar la encriptación en las subinterfaces", "Porque el comando 'no shutdown' configura automáticamente las direcciones IP"], 
+                        correct: 0
+                    }
+                ]
+            },
+            // Exámenes SI (Sistemas Informáticos)
+            SIBasico: {
+                description: "Examen básico de comandos de Linux.",
+                questions: [
+                    { 
+                        text: "¿Cuál es el comando para listar archivos y directorios en Linux?", 
+                        options: ["ls", "cd", "mkdir", "pwd"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se utiliza para cambiar de directorio?", 
+                        options: ["mv", "cp", "cd", "rm"], 
                         correct: 2
                     },
                     { 
-                        text: "En una red con IP 192.168.10.20/24, ¿cuál es el rango de direcciones asignables a hosts y cuántos son utilizables?", 
-                        options: ["192.168.10.1 – 192.168.10.254; 254 hosts", "192.168.10.0 – 192.168.10.255; 256 hosts", "192.168.10.1 – 192.168.10.253; 253 hosts", "192.168.10.2 – 192.168.10.254; 253 hosts"], 
+                        text: "¿Cuál es el comando para crear un nuevo directorio?", 
+                        options: ["mkdir", "touch", "rmdir", "nano"], 
                         correct: 0
                     },
                     { 
-                        text: "Con una máscara /30, ¿cuántas direcciones IP totales existen y cuántas se pueden asignar a hosts?", 
-                        options: ["4 totales, 2 asignables", "8 totales, 6 asignables", "2 totales, 0 asignables", "16 totales, 14 asignables"], 
+                        text: "¿Qué comando se utiliza para ver el contenido de un archivo de texto?", 
+                        options: ["cat", "cp", "mv", "rm"], 
                         correct: 0
                     },
                     { 
-                        text: "El comando “service password-encryption” en un router tiene el siguiente efecto:", 
-                        options: ["Encripta solo las contraseñas nuevas creadas después de su ejecución", "Encripta todas las contraseñas almacenadas, incluidas las ya existentes", "Elimina la necesidad de configurarlas", "Solo afecta a las contraseñas de acceso remoto"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "¿Qué diferencia existe entre “login” y “login local” en la configuración de líneas VTY?", 
-                        options: ["“login” utiliza autenticación remota, mientras “login local” utiliza la base de datos local del router", "“login” deshabilita la autenticación y “login local” la habilita", "No hay diferencia, ambos usan la base de datos local", "“login” utiliza contraseñas en texto plano y “login local” contraseñas encriptadas"], 
+                        text: "¿Qué comando permite copiar archivos o directorios?", 
+                        options: ["cp", "mv", "rm", "ls"], 
                         correct: 0
                     },
                     { 
-                        text: "Durante la generación de claves RSA para SSH, ¿por qué es importante especificar la longitud (por ejemplo, 1024 o 2048 bits)?", 
-                        options: ["Solo afecta la velocidad de la conexión, sin impacto en la seguridad", "Una clave más larga proporciona mayor seguridad aunque pueda afectar el rendimiento", "Las claves de 1024 bits son más seguras que las de 2048 bits", "La longitud no influye en la seguridad de SSH"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "¿Por qué deben todos los hosts en una misma red tener la misma dirección de red y puerta de enlace predeterminada?", 
-                        options: ["Para garantizar la autenticación de usuarios", "Para evitar conflictos de IP y permitir la comunicación interna y externa", "Para aumentar la velocidad de la red", "Para que el router asigne direcciones automáticamente"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "En una red de clase C, ¿qué efecto tiene configurar una máscara mayor a /30 en cuanto al número de hosts disponibles?", 
-                        options: ["Permite conectar más de 254 hosts", "Limita el número de hosts disponibles en la subred", "Incrementa el rango de direcciones de red", "No afecta el número de hosts asignables"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Dado que el bloque 127.0.0.0/8 se reserva para loopback, ¿cuál es su función principal?", 
-                        options: ["Facilitar pruebas de red y múltiples servicios", "Garantizar que el tráfico de loopback no se enrute a la red externa", "Permitir que varios hosts compartan la misma dirección", "Incrementar la velocidad de comunicación interna"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Las direcciones de enlace local (169.254.0.0/16) se asignan automáticamente en los hosts cuando:", 
-                        options: ["Se configuran manualmente", "No se dispone de un servidor DHCP", "Se enrutan a través de Internet", "Se utiliza acceso remoto"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Configurar el “hostname” en un router es esencial porque:", 
-                        options: ["Mejora la velocidad del dispositivo", "Identifica el dispositivo en la red y facilita su administración", "Cifra las contraseñas configuradas", "Asigna automáticamente la dirección IP"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "El comando “copy startup-config running-config” sirve para:", 
-                        options: ["Guardar la configuración actual para que no se pierda al reiniciar", "Restaurar la configuración guardada en NVRAM a la configuración en ejecución", "Mostrar la configuración actual del router", "Eliminar la configuración activa"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "El tráfico multicast (Clase D) se diferencia del unicast en que utiliza direcciones IP en el rango:", 
-                        options: ["Donde la porción de host está en 0", "224.0.0.0/4 para enviar datos a un grupo de hosts", "De loopback exclusivo", "Igual que el unicast, sin diferencia en el formato"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Al configurar SSH en un router, ¿por qué se recomienda incluir “ip ssh version 2”?", 
-                        options: ["Porque la versión 2 mejora la seguridad y autenticación", "Porque la versión 2 es más rápida pero menos segura", "Porque la versión 1 no permite cifrado", "Porque ambas versiones son igualmente seguras"], 
+                        text: "¿Qué comando se utiliza para mover o renombrar archivos?", 
+                        options: ["mv", "cp", "rm", "find"], 
                         correct: 0
                     },
                     { 
-                        text: "Configurar una dirección IP con una máscara menor a la indicada por su clase implica que:", 
-                        options: ["Se permite mayor cantidad de hosts", "La dirección estaría “invadiendo” otras redes, generando conflictos", "No tiene impacto en la red", "Aumenta la velocidad de transmisión de datos"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "El comando “show interfaces” se utiliza en un router para:", 
-                        options: ["Mostrar la configuración completa del dispositivo", "Proporcionar estadísticas y el estado de cada interfaz para detectar problemas de conectividad", "Reiniciar todas las interfaces", "Configurar nuevas interfaces de red"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Una de las principales ventajas de usar SSH en lugar de Telnet para el acceso remoto es que:", 
-                        options: ["SSH permite conexiones sin autenticación", "SSH cifra la comunicación, ofreciendo mayor seguridad", "Telnet es compatible con todos los routers sin configuración adicional", "SSH no requiere autenticación alguna"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "La porción de host en una dirección IP se utiliza para:", 
-                        options: ["Identificar la red a la que pertenece el dispositivo", "Identificar de forma única a cada dispositivo dentro de una red y determinar cuántos hosts son posibles", "Se mantiene fija en todas las redes", "Determinar únicamente la dirección de broadcast"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "En el cálculo de direcciones IP para una red, ¿por qué se resta 2 al total de direcciones disponibles?", 
-                        options: ["Para reservar espacio para expansiones futuras", "Porque se reservan la dirección de red y la de broadcast, que no se pueden asignar a hosts", "Por motivos de seguridad", "Es una convención histórica sin impacto técnico"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Para eliminar la contraseña configurada en el acceso por consola de un router, se debe:", 
-                        options: ["Ejecutar el comando “no password” en el modo de configuración de línea", "Reiniciar el router", "Configurar una nueva contraseña sobre la existente", "No es posible eliminarla una vez establecida"], 
+                        text: "¿Qué comando se utiliza para eliminar archivos?", 
+                        options: ["rm", "cp", "mv", "ls"], 
                         correct: 0
+                    },
+                    { 
+                        text: "¿Cuál es el comando para cambiar los permisos de un archivo?", 
+                        options: ["chmod", "chown", "chgrp", "passwd"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando muestra los permisos y propiedades de un archivo?", 
+                        options: ["ls -l", "ls -a", "cat", "file"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando muestra el directorio actual?", 
+                        options: ["pwd", "cd", "ls", "dir"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se utiliza para ver el manual de un comando?", 
+                        options: ["man", "help", "info", "whatis"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se usa para buscar archivos en el sistema?", 
+                        options: ["find", "locate", "grep", "search"], 
+                        correct: 0
+                    }
+                ]
+            },
+            SIGestionUsuarios: {
+                description: "Examen de gestión de usuarios y permisos en Linux.",
+                questions: [
+                    { 
+                        text: "¿Qué comando se utiliza para ver los usuarios conectados al sistema?", 
+                        options: ["who", "where", "whoami", "users"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál comando muestra el usuario actual?", 
+                        options: ["whoami", "who", "id", "users"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando muestra la información del usuario y grupo actual?", 
+                        options: ["id", "ls", "pwd", "chown"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué archivo almacena las contraseñas cifradas en Linux?", 
+                        options: ["/etc/shadow", "/etc/passwd", "/etc/group", "/etc/sudoers"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se utiliza para agregar un nuevo usuario?", 
+                        options: ["useradd", "adduser", "Tanto A como B (según la distribución)", "newuser"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué comando permite cambiar la contraseña del usuario?", 
+                        options: ["passwd", "chpass", "setpass", "modpass"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se usa para cambiar el propietario de un archivo?", 
+                        options: ["chown", "chmod", "chgrp", "ls"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se utiliza para cambiar el grupo asociado a un archivo?", 
+                        options: ["chgrp", "chown", "chmod", "groups"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando permite modificar los permisos de acceso de un archivo?", 
+                        options: ["chmod", "chown", "chgrp", "usermod"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál de los siguientes permisos NO es válido en Linux?", 
+                        options: ["r (read)", "w (write)", "x (execute)", "v (verify)"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué comando permite listar todos los grupos del sistema?", 
+                        options: ["cat /etc/group", "groups", "id", "listgroups"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para modificar el archivo de sudoers de forma segura se utiliza:", 
+                        options: ["visudo", "sudoedit", "nano", "vi"], 
+                        correct: 0
+                    }
+                ]
+            },
+            SIComandosAvanzados: {
+                description: "Examen de comandos avanzados y manejo de procesos en Linux.",
+                questions: [
+                    { 
+                        text: "¿Qué comando se usa para crear un archivo vacío?", 
+                        options: ["touch", "mkdir", "cat", "nano"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cómo se muestran los archivos ocultos en un directorio?", 
+                        options: ["ls -a", "ls -l", "ls -h", "ls --hidden"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando permite mostrar el contenido de un archivo paginando su salida?", 
+                        options: ["less", "more", "cat", "tail"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para copiar directorios de forma recursiva se utiliza:", 
+                        options: ["cp -r", "cp -a", "mv -r", "cp -f"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando se utiliza para buscar dentro de archivos por una cadena de texto?", 
+                        options: ["grep", "find", "search", "locate"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál comando muestra la estructura de directorios en forma de árbol?", 
+                        options: ["tree", "ls", "find", "graph"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando permite comparar el contenido de dos archivos?", 
+                        options: ["diff", "cmp", "Ambas A y B son correctas", "comm"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué comando se utiliza para ver el uso del disco?", 
+                        options: ["df", "du", "disk", "free"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando permite ver procesos en ejecución?", 
+                        options: ["ps", "top", "htop", "Todos son válidos"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué comando muestra las últimas líneas de un archivo?", 
+                        options: ["tail", "head", "less", "more"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando permite ver las primeras líneas de un archivo?", 
+                        options: ["head", "tail", "less", "more"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para finalizar un proceso se usa el comando:", 
+                        options: ["kill", "stop", "end", "exit"], 
+                        correct: 0
+                    }
+                ]
+            },
+            // Exámenes IPEI
+            IPEIFacil: {
+                description: "Examen fácil de IPEI (Salario y Seguridad Social).",
+                questions: [
+                    { 
+                        text: "¿Qué es el salario?", 
+                        options: [
+                            "Es el dinero que el trabajador paga a la empresa.",
+                            "Es un incentivo ocasional.",
+                            "Es un subsidio estatal.",
+                            "Es la remuneración que recibe el trabajador por su labor."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "La Seguridad Social se define como:", 
+                        options: [
+                            "Una bonificación por desempeño.",
+                            "Una modalidad de ahorro obligatorio.",
+                            "Un sistema de protección social que cubre contingencias.",
+                            "Un impuesto único que se paga una sola vez."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál de los siguientes elementos se considera parte del salario?", 
+                        options: [
+                            "La remuneración en dinero y en especie.",
+                            "El incentivo social familiar.",
+                            "La jornada de trabajo.",
+                            "La antigüedad en la empresa."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El salario base se refiere a:", 
+                        options: [
+                            "La suma total de bonificaciones e incentivos.",
+                            "Las horas extras pagadas.",
+                            "La remuneración fija pactada en el contrato.",
+                            "Los descuentos por absentismo."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "La cotización a la Seguridad Social se destina a:", 
+                        options: [
+                            "Incrementar el salario neto mensual.",
+                            "Realizar inversiones empresariales.",
+                            "Pagar multas laborales.",
+                            "Financiar la protección social de los trabajadores."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál de las siguientes opciones describe mejor el salario neto?", 
+                        options: [
+                            "El salario que recibe el trabajador después de deducciones.",
+                            "El salario antes de descuentos.",
+                            "La suma de todas las bonificaciones.",
+                            "El salario bruto aumentado por incentivos."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En el contexto laboral, 'prestaciones' se refiere a:", 
+                        options: [
+                            "Los servicios prestados por el trabajador a la empresa.",
+                            "El salario base únicamente.",
+                            "Los impuestos que se deducen del salario.",
+                            "Los beneficios y derechos que el trabajador recibe (como vacaciones, prestaciones sociales, etc.)."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué organismo gestiona la Seguridad Social en muchos países?", 
+                        options: [
+                            "La empresa privada.",
+                            "Una entidad pública o autónoma.",
+                            "El Ministerio de Hacienda.",
+                            "Las cámaras de comercio."
+                        ], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el objetivo principal de la Seguridad Social?", 
+                        options: [
+                            "Incrementar las ganancias empresariales.",
+                            "Reducir los impuestos estatales.",
+                            "Proteger al trabajador frente a contingencias sociales.",
+                            "Establecer las condiciones de un contrato laboral."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "El salario se puede abonar en dinero o en especie. Esto último significa que:", 
+                        options: [
+                            "Se recibe parte del pago en forma de bienes o servicios.",
+                            "Se paga únicamente con bienes de consumo.",
+                            "No se paga en efectivo.",
+                            "Es un complemento variable del salario base."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué son las 'cotizaciones' en el ámbito de la Seguridad Social?", 
+                        options: [
+                            "Bonificaciones por productividad.",
+                            "Descuentos por absentismo.",
+                            "Incentivos fiscales.",
+                            "Aportes obligatorios que realizan trabajadores y empleadores."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "La base de cotización es:", 
+                        options: [
+                            "El salario neto del trabajador.",
+                            "La suma de todos los descuentos.",
+                            "La cantidad sobre la que se calculan las aportaciones a la Seguridad Social.",
+                            "Un concepto independiente del salario."
+                        ], 
+                        correct: 2
+                    }
+                ]
+            },
+            IPEIIntermedio: {
+                description: "Examen intermedio de IPEI (Salario y Seguridad Social).",
+                questions: [
+                    { 
+                        text: "La estructura del salario puede incluir complementos salariales. ¿Cuál de los siguientes es un ejemplo de complemento?", 
+                        options: [
+                            "El salario base.",
+                            "La cotización obrera.",
+                            "La deducción por absentismo.",
+                            "El plus de transporte."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "Dentro del salario, ¿qué función cumple el complemento de antigüedad?", 
+                        options: [
+                            "Reconocer los años de servicio en la empresa.",
+                            "Reconocer la formación académica del trabajador.",
+                            "Incentivar la productividad en el corto plazo.",
+                            "Compensar el exceso de horas extras."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El concepto de 'salario en especie' se utiliza cuando:", 
+                        options: [
+                            "Se abona exclusivamente en efectivo.",
+                            "Se perciben bonificaciones salariales.",
+                            "Parte de la remuneración se entrega en bienes o servicios.",
+                            "Se descuentan los impuestos laborales."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "La base reguladora en el ámbito de la Seguridad Social se utiliza para calcular:", 
+                        options: [
+                            "La bonificación por productividad.",
+                            "El salario base de nuevos empleados.",
+                            "El incentivo por puntualidad.",
+                            "La cuantía de las prestaciones (como jubilación o incapacidad)."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué elementos NO se integran en la base de cotización?", 
+                        options: [
+                            "El salario base.",
+                            "Las dietas no compensadas.",
+                            "Los complementos salariales de carácter fijo.",
+                            "Las retribuciones en especie, siempre que excedan ciertos límites."
+                        ], 
+                        correct: 1
+                    },
+                    { 
+                        text: "La diferencia entre salario bruto y neto se debe principalmente a:", 
+                        options: [
+                            "Los incentivos por desempeño.",
+                            "La cantidad de horas trabajadas.",
+                            "Las deducciones de cotizaciones e impuestos.",
+                            "Los complementos salariales."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué obligación tiene el empleador respecto a las cotizaciones a la Seguridad Social?", 
+                        options: [
+                            "Está obligado a retener e ingresar las cotizaciones de sus empleados.",
+                            "Solo debe abonarlas si el trabajador lo solicita.",
+                            "Puede decidir no cotizar si se llega a un acuerdo con el trabajador.",
+                            "Solo cotiza sobre las horas extras."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "La 'retribución variable' se relaciona con:", 
+                        options: [
+                            "Un complemento fijo en el contrato.",
+                            "La base de cotización mínima.",
+                            "Las deducciones obligatorias.",
+                            "Pagos que pueden fluctuar según el rendimiento o resultados."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "El salario mínimo interprofesional se establece para:", 
+                        options: [
+                            "Incentivar la competitividad entre empresas.",
+                            "Garantizar una remuneración mínima a cualquier trabajador.",
+                            "Regular únicamente a los trabajadores del sector público.",
+                            "Excluir a trabajadores con experiencia."
+                        ], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se entiende por 'descuentos legales' en el salario?", 
+                        options: [
+                            "Descuentos por compras en la empresa.",
+                            "Reducciones voluntarias acordadas entre trabajador y empleador.",
+                            "Deducciones establecidas por la ley, como impuestos y cotizaciones.",
+                            "Descuentos por incentivos laborales."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "En el cálculo del salario, las horas extraordinarias se compensan generalmente:", 
+                        options: [
+                            "Mediante descuentos en el salario neto.",
+                            "Con un pago superior al valor de la hora ordinaria.",
+                            "Con una reducción en la base de cotización.",
+                            "Únicamente con días libres."
+                        ], 
+                        correct: 1
+                    },
+                    { 
+                        text: "La periodicidad del pago del salario suele ser:", 
+                        options: [
+                            "Anual.",
+                            "Solo al finalizar el contrato.",
+                            "Variable, sin una norma definida.",
+                            "Semanal, quincenal o mensual, según lo establecido en el convenio."
+                        ], 
+                        correct: 3
+                    }
+                ]
+            },
+            IPEIDificil: {
+                description: "Examen difícil de IPEI (Salario y Seguridad Social).",
+                questions: [
+                    { 
+                        text: "La composición del salario, según la normativa vigente, puede incluir varios conceptos. ¿Cuál de las siguientes afirmaciones es CORRECTA?", 
+                        options: [
+                            "Solo se consideran retribuciones en dinero.",
+                            "Los complementos salariales no influyen en la base de cotización.",
+                            "Las dietas siempre se integran en la base de cotización sin excepción.",
+                            "Se integran tanto retribuciones en dinero como en especie, respetando límites legales."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "En materia de cotización, ¿cómo se trata la retribución en especie?", 
+                        options: [
+                            "Siempre se integra íntegramente en la base de cotización.",
+                            "No se integra jamás en la base de cotización.",
+                            "Se integra solo cuando supera determinados límites fijados legalmente.",
+                            "Solo se integra si el trabajador lo solicita."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "La 'base de cotización' es fundamental para el cálculo de prestaciones. ¿Cuál es su importancia?", 
+                        options: [
+                            "Sirve de referencia para calcular las prestaciones contributivas de la Seguridad Social.",
+                            "Determina únicamente el salario neto del trabajador.",
+                            "Es un dato irrelevante para la jubilación.",
+                            "Se utiliza únicamente para calcular el salario bruto."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Una situación de incumplimiento en el ingreso de cotizaciones por parte del empleador puede generar:", 
+                        options: [
+                            "Solo sanciones administrativas sin efectos sobre el trabajador.",
+                            "Un aumento automático del salario base.",
+                            "La pérdida de derechos a determinadas prestaciones por parte del trabajador.",
+                            "Beneficios fiscales para la empresa."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Respecto a la retribución variable, ¿qué factor es determinante en su cálculo?", 
+                        options: [
+                            "La antigüedad únicamente.",
+                            "La situación personal del trabajador.",
+                            "El número de días festivos.",
+                            "Los resultados o rendimiento alcanzado por el trabajador o la empresa."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "El principio de irrenunciabilidad de los derechos laborales implica que:", 
+                        options: [
+                            "El trabajador puede aceptar condiciones inferiores a las legales a cambio de incentivos.",
+                            "Las partes pueden pactar descuentos adicionales en el salario.",
+                            "Ningún trabajador puede renunciar a derechos fundamentales establecidos por la ley, aun mediante acuerdo individual.",
+                            "Los beneficios sociales son negociables libremente en el contrato."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "En un escenario de reestructuración empresarial, la protección de la Seguridad Social busca:", 
+                        options: [
+                            "Incrementar la carga contributiva de los trabajadores.",
+                            "Eliminar el pago de cotizaciones en casos especiales.",
+                            "Permitir acuerdos individuales para renunciar a prestaciones.",
+                            "Garantizar que, a pesar de cambios, se mantengan derechos mínimos de protección social."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cómo se determina la cuantía de la prestación por incapacidad temporal?", 
+                        options: [
+                            "Basándose únicamente en el salario base.",
+                            "Mediante un porcentaje fijo del salario neto.",
+                            "A partir de la base reguladora, que incluye la totalidad de las retribuciones integradas legalmente.",
+                            "Según el convenio colectivo sin referencia a la base de cotización."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Las bonificaciones en las cuotas empresariales de la Seguridad Social tienen como objetivo:", 
+                        options: [
+                            "Incentivar la contratación y favorecer determinados colectivos o situaciones.",
+                            "Disminuir la competitividad de las empresas.",
+                            "Incrementar el salario bruto de los trabajadores.",
+                            "Eliminar la obligación de cotizar en determinados supuestos."
+                        ], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En el contexto legal, ¿cuál es el efecto de integrar determinados complementos salariales en la base de cotización?", 
+                        options: [
+                            "Siempre incrementa la cuota a pagar por el empleador.",
+                            "Se traduce en una reducción automática del salario neto.",
+                            "Puede aumentar la protección del trabajador al elevar la base de cálculo de prestaciones, pero también la cuantía de las cotizaciones.",
+                            "No tiene ningún efecto en la protección social."
+                        ], 
+                        correct: 2
+                    },
+                    { 
+                        text: "El tratamiento fiscal del salario establece que:", 
+                        options: [
+                            "Todas las retribuciones, sin excepción, tributan al mismo tipo.",
+                            "Los complementos salariales no están sujetos a tributación.",
+                            "El salario bruto y neto son equivalentes para efectos fiscales.",
+                            "Existen ciertos límites y exenciones para retribuciones en especie y otros complementos."
+                        ], 
+                        correct: 3
+                    },
+                    { 
+                        text: "La actualización del salario mínimo interprofesional se basa en:", 
+                        options: [
+                            "En criterios sociales y económicos determinados por la ley, considerando la evolución de precios y otros indicadores.",
+                            "Únicamente en la productividad empresarial.",
+                            "La decisión unilateral del Ministerio de Trabajo.",
+                            "La negociación colectiva exclusiva de cada empresa."
+                        ], 
+                        correct: 0
+                    }
+                ]
+            },
+            // Exámenes IP (Vocabulario)
+            IPVocabulario: {
+                description: "Examen de vocabulario técnico en inglés.",
+                questions: [
+                    { 
+                        text: "¿Cuál es la traducción correcta de abolish?", 
+                        options: ["Conservar", "Establecer", "Abolir", "Mantener"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de mischief?", 
+                        options: ["Desorden", "Engaño", "Caos", "Travesura"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de cautious?", 
+                        options: ["Temeroso", "Imprudente", "Cauteloso", "Despreocupado"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de troubleshoot?", 
+                        options: ["Configurar redes", "Diagnosticar hardware", "Instalar programas", "Solucionar problemas"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de control panel?", 
+                        options: ["Teclado", "Monitor", "Unidad central", "Panel de control"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de loose connection?", 
+                        options: ["Conexión estable", "Conexión fija", "Conexión rápida", "Conexión suelta"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de no signal message?", 
+                        options: ["Mensaje de error", "Mensaje de bienvenida", "Mensaje de actualización", "Mensaje de 'sin señal'"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de power button?", 
+                        options: ["Botón de volumen", "Botón de reinicio", "Botón de inicio", "Botón de encendido"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de volume control?", 
+                        options: ["Control de brillo", "Control de sonido", "Control de volumen", "Control de energía"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de freeze (en el contexto de un proceso que deja de responder)?", 
+                        options: ["Reinicio", "Bloqueo", "Actualización", "Optimización"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de log off?", 
+                        options: ["Iniciar sesión", "Cerrar sesión", "Conectar", "Bloquear sesión"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es la traducción correcta de make sure?", 
+                        options: ["Descuidarse", "Confiar", "Olvidarse", "Asegurarse"], 
+                        correct: 3
                     }
                 ]
             }
         };
 
+        // Variables globales
         let currentExam = [];
         let currentQuestionIndex = 0;
         let userAnswers = [];
         let pointsPerCorrect = 0;
         let pointsPerIncorrect = 0;
+        let examResults = [];
+        let currentUser = null;
+        let loginPromptShown = false;
 
+        // Inicializar Google Sign-In
+        function initializeGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: "683303431957-5r53be9ud54av50kboa1v9eg0c35eltj.apps.googleusercontent.com",
+                callback: handleGoogleSignIn
+            });
+            
+            // Renderizar el botón de Google en el menú de configuración
+            google.accounts.id.renderButton(
+                document.getElementById("googleLoginContainer"),
+                { 
+                    type: "standard",
+                    theme: "filled_blue",
+                    size: "medium",
+                    text: "signin_with",
+                    shape: "pill",
+                    logo_alignment: "left"
+                }
+            );
+            
+            // Actualizar estado de login
+            updateLoginStatus();
+        }
+
+        // Función para manejar el inicio de sesión con Google
+        function handleGoogleSignIn(response) {
+            const user = {
+                id: response.credential,
+                name: response.clientId,
+                email: response.client_id,
+                avatar: 'https://lh3.googleusercontent.com/a/default-user' // Avatar por defecto
+            };
+            
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Mostrar información del usuario en el menú principal
+            document.getElementById('userAvatar').src = user.avatar;
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userInfo').style.display = 'flex';
+            
+            // Actualizar estado de login en el menú de configuración
+            updateLoginStatus();
+            
+            // Cargar datos del usuario desde Firebase/Backend
+            loadUserData(user.id);
+        }
+
+        // Actualizar estado de login en el menú de configuración
+        function updateLoginStatus() {
+            const loginStatus = document.getElementById('loginStatus');
+            const googleLoginContainer = document.getElementById('googleLoginContainer');
+            
+            if (currentUser) {
+                loginStatus.style.display = 'block';
+                googleLoginContainer.style.display = 'none';
+            } else {
+                loginStatus.style.display = 'none';
+                googleLoginContainer.style.display = 'block';
+            }
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            
+            // Ocultar información del usuario en el menú principal
+            document.getElementById('userInfo').style.display = 'none';
+            
+            // Actualizar estado de login en el menú de configuración
+            updateLoginStatus();
+        }
+
+        // Función para cargar datos del usuario
+        function loadUserData(userId) {
+            // Aquí iría la conexión con Firebase o tu backend
+            // Por ahora simulamos una carga de datos
+            
+            // Verificar si hay datos guardados localmente para este usuario
+            const userData = localStorage.getItem(`userData_${userId}`);
+            if (userData) {
+                const data = JSON.parse(userData);
+                examResults = data.examResults || [];
+                
+                // Cargar configuración
+                if (data.settings) {
+                    document.getElementById('shuffleAnswers').checked = data.settings.shuffleAnswers;
+                    document.getElementById('themeSelect').value = data.settings.theme;
+                    applyTheme(data.settings.theme);
+                }
+                
+                updateResultsList();
+            }
+        }
+
+        // Función para guardar datos del usuario
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            const userData = {
+                settings: {
+                    shuffleAnswers: document.getElementById('shuffleAnswers').checked,
+                    theme: document.getElementById('themeSelect').value
+                },
+                examResults: examResults
+            };
+            
+            // Aquí iría la conexión con Firebase o tu backend
+            // Por ahora guardamos localmente
+            localStorage.setItem(`userData_${currentUser.id}`, JSON.stringify(userData));
+        }
+
+        // Cargar configuración guardada al iniciar
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('examSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('shuffleAnswers').checked = settings.shuffleAnswers;
+                document.getElementById('themeSelect').value = settings.theme;
+                applyTheme(settings.theme);
+            } else {
+                // Configuración por defecto
+                document.getElementById('shuffleAnswers').checked = true;
+                document.getElementById('themeSelect').value = 'blue';
+                applyTheme('blue');
+                saveSettings();
+            }
+            
+            const savedResults = localStorage.getItem('examResults');
+            if (savedResults) {
+                examResults = JSON.parse(savedResults);
+                updateResultsList();
+            }
+        }
+
+        // Guardar configuración
+        function saveSettings() {
+            const settings = {
+                shuffleAnswers: document.getElementById('shuffleAnswers').checked,
+                theme: document.getElementById('themeSelect').value
+            };
+            localStorage.setItem('examSettings', JSON.stringify(settings));
+            saveUserData();
+        }
+
+        // Guardar resultados
+        function saveResults() {
+            localStorage.setItem('examResults', JSON.stringify(examResults));
+            saveUserData();
+        }
+
+        // Aplicar tema seleccionado
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+
+        // Restablecer configuración
+        function resetSettings() {
+            document.getElementById('shuffleAnswers').checked = true;
+            document.getElementById('themeSelect').value = 'blue';
+            applyTheme('blue');
+            saveSettings();
+        }
+
+        // Alternar menú de configuración con animación
+        function toggleConfigMenu() {
+            const menu = document.getElementById('configMenu');
+            const resultsMenu = document.getElementById('resultsMenu');
+            
+            // Cerrar menú de resultados si está abierto
+            if (resultsMenu.classList.contains('active')) {
+                resultsMenu.classList.add('closing');
+                setTimeout(() => {
+                    resultsMenu.classList.remove('active', 'closing');
+                }, 300);
+            }
+            
+            if (menu.classList.contains('active')) {
+                menu.classList.add('closing');
+                setTimeout(() => {
+                    menu.classList.remove('active', 'closing');
+                }, 300);
+            } else {
+                menu.classList.add('active');
+                menu.classList.remove('closing');
+            }
+        }
+
+        // Cerrar menú de configuración
+        function closeConfigMenu() {
+            const menu = document.getElementById('configMenu');
+            menu.classList.add('closing');
+            setTimeout(() => {
+                menu.classList.remove('active', 'closing');
+            }, 300);
+        }
+
+        // Alternar menú de resultados con animación
+        function toggleResultsMenu() {
+            const menu = document.getElementById('resultsMenu');
+            const configMenu = document.getElementById('configMenu');
+            
+            // Cerrar menú de configuración si está abierto
+            if (configMenu.classList.contains('active')) {
+                configMenu.classList.add('closing');
+                setTimeout(() => {
+                    configMenu.classList.remove('active', 'closing');
+                }, 300);
+            }
+            
+            if (menu.classList.contains('active')) {
+                menu.classList.add('closing');
+                setTimeout(() => {
+                    menu.classList.remove('active', 'closing');
+                }, 300);
+            } else {
+                menu.classList.add('active');
+                menu.classList.remove('closing');
+            }
+        }
+
+        // Cerrar menú de resultados
+        function closeResultsMenu() {
+            const menu = document.getElementById('resultsMenu');
+            menu.classList.add('closing');
+            setTimeout(() => {
+                menu.classList.remove('active', 'closing');
+            }, 300);
+        }
+
+        // Borrar todos los resultados
+        function clearAllResults() {
+            if (confirm("¿Estás seguro de que quieres borrar todos los resultados de exámenes? Esta acción no se puede deshacer.")) {
+                examResults = [];
+                localStorage.removeItem('examResults');
+                
+                // Si hay un usuario logueado, también borramos sus resultados
+                if (currentUser) {
+                    const userData = localStorage.getItem(`userData_${currentUser.id}`);
+                    if (userData) {
+                        const data = JSON.parse(userData);
+                        data.examResults = [];
+                        localStorage.setItem(`userData_${currentUser.id}`, JSON.stringify(data));
+                    }
+                }
+                
+                updateResultsList();
+                closeResultsMenu();
+            }
+        }
+
+        // Actualizar lista de resultados
+        function updateResultsList() {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            if (examResults.length === 0) {
+                resultsList.innerHTML = '<div class="no-results">Aquí aparecerán los resultados de tus exámenes</div>';
+                return;
+            }
+            
+            examResults.forEach((result, index) => {
+                const examResult = document.createElement('div');
+                examResult.className = 'exam-result';
+                examResult.innerHTML = `
+                    <p><strong>${result.examName}</strong></p>
+                    <p>Nota: ${result.score}/10</p>
+                    <p>Fecha: ${new Date(result.timestamp).toLocaleString()}</p>
+                `;
+                examResult.onclick = () => showExamResult(index);
+                resultsList.appendChild(examResult);
+            });
+        }
+
+        // Mostrar resultado completo de un examen
+        function showExamResult(index) {
+            const result = examResults[index];
+            
+            // Limpiar resultados anteriores
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('loadingScreen').style.display = 'none';
+            
+            document.getElementById('score').innerText = `Tu nota fue: ${result.score}/10. Respuestas correctas: ${result.correctAnswers}/${result.totalQuestions}`;
+            
+            let summaryHTML = '';
+            result.questions.forEach((q, i) => {
+                if (q.userAnswer !== null) {
+                    if (q.userAnswer === q.correctAnswer) {
+                        summaryHTML += `<li class="correct-answer">✔️ Pregunta ${i + 1}: ${q.questionText}</li>`;
+                    } else {
+                        summaryHTML += `<li class="incorrect-answer">❌ Pregunta ${i + 1}: ${q.questionText}<br>
+                        <strong>Tu respuesta:</strong> ${q.options[q.userAnswer]}<br>
+                        <strong>Respuesta correcta:</strong> ${q.options[q.correctAnswer]}</li>`;
+                    }
+                } else {
+                    summaryHTML += `<li>🧻 Pregunta ${i + 1}: ${q.questionText}<br>
+                    <strong>No respondida</strong><br>
+                    <strong>Respuesta correcta:</strong> ${q.options[q.correctAnswer]}</li>`;
+                }
+            });
+            
+            document.getElementById('summary').innerHTML = summaryHTML;
+            closeResultsMenu();
+        }
+
+        // Mezclar array
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -734,13 +2072,15 @@
             }
         }
 
+        // Seleccionar preguntas aleatorias
         function selectRandomQuestions(examKey) {
             const examData = exams[examKey];
-            const allQuestions = examData.questions;
+            const allQuestions = [...examData.questions];
             shuffleArray(allQuestions);
-            return allQuestions.slice(0, 12); // Selecciona 12 preguntas aleatorias
+            return allQuestions.slice(0, 12);
         }
 
+        // Cargar categoría con animación
         function loadCategory(category) {
             document.getElementById("examMenu").style.display = "none";
             document.querySelectorAll(".category-menu").forEach(menu => {
@@ -750,23 +2090,51 @@
             document.getElementById(category).classList.add("active");
         }
 
+        // Volver al menú principal con animación
         function backToMainMenu() {
-            document.getElementById("examMenu").style.display = "block";
-            document.querySelectorAll(".category-menu").forEach(menu => {
-                menu.style.display = "none";
-            });
+            const activeMenu = document.querySelector('.category-menu.active');
+            if (activeMenu) {
+                activeMenu.classList.add('closing');
+                setTimeout(() => {
+                    activeMenu.style.display = 'none';
+                    activeMenu.classList.remove('active', 'closing');
+                    document.getElementById("examMenu").style.display = "block";
+                    document.getElementById("examMenu").style.animation = 'fadeIn 0.5s ease';
+                }, 300);
+            }
         }
 
+        // Volver al menú de categoría con animación
         function backToCategoryMenu() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("quizContainer").style.display = "none";
-            document.getElementById("result").style.display = "none";
-            document.querySelector(".category-menu.active").style.display = "block";
+            
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.animation = 'shrinkAnimation 0.3s ease forwards';
+            setTimeout(() => {
+                resultDiv.style.display = "none";
+                resultDiv.style.animation = '';
+                document.querySelector(".category-menu.active").style.display = "block";
+                document.querySelector('.container').style.animation = 'slideIn 0.5s ease';
+            }, 300);
         }
 
+        // Cargar examen
         function loadExam(examKey) {
             const examData = exams[examKey];
-            currentExam = examKey.includes('SOM') ? examData.questions : selectRandomQuestions(examKey);
+            currentExam = examKey.includes('SOM') ? [...examData.questions] : selectRandomQuestions(examKey);
+            
+            // Mezclar respuestas si está habilitado
+            if (document.getElementById('shuffleAnswers').checked) {
+                currentExam.forEach(q => {
+                    // Guardar la respuesta correcta antes de mezclar
+                    const correctAnswer = q.options[q.correct];
+                    shuffleArray(q.options);
+                    // Actualizar el índice de la respuesta correcta después de mezclar
+                    q.correct = q.options.indexOf(correctAnswer);
+                });
+            }
+            
             userAnswers = new Array(currentExam.length).fill(null);
             pointsPerCorrect = (10 / currentExam.length).toFixed(2);
             pointsPerIncorrect = (5 / currentExam.length).toFixed(2);
@@ -781,18 +2149,18 @@
                 menu.style.display = "none";
             });
             document.getElementById("startScreen").style.display = "block";
-            document.getElementById("restartButton").disabled = true;
         }
 
+        // Iniciar examen
         function startExam() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("quizContainer").style.display = "block";
-            document.getElementById("restartButton").disabled = false;
             updateProgressBar();
             loadQuestion(currentQuestionIndex);
             document.querySelector('.container').style.animation = 'expandAnimation 0.5s ease';
         }
 
+        // Cargar pregunta
         function loadQuestion(index) {
             const questionContainer = document.getElementById("questions");
             questionContainer.innerHTML = "";
@@ -803,7 +2171,7 @@
                 div.className = "question-container";
                 div.innerHTML = `<p><strong>${index + 1}. ${q.text}</strong></p>` +
                     q.options.map((option, i) =>
-                        `<label><input type="radio" name="q${index}" value="${i}" ${userAnswers[index] === i ? "checked" : ""}> ${option}</label><br>`
+                        `<label><input type="radio" name="q${index}" value="${i}" ${userAnswers[index] === i ? "checked" : ""} onclick="toggleAnswer(${index}, ${i})"> ${option}</label><br>`
                     ).join("");
                 questionContainer.appendChild(div);
                 div.style.display = "block";
@@ -813,6 +2181,21 @@
             document.getElementById("nextButton").innerText = index === currentExam.length - 1 ? "Finalizar" : "Siguiente";
         }
 
+        // Alternar respuesta (permite desmarcar haciendo clic nuevamente)
+        function toggleAnswer(questionIndex, optionIndex) {
+            if (userAnswers[questionIndex] === optionIndex) {
+                userAnswers[questionIndex] = null; // Desmarcar si ya estaba seleccionada
+            } else {
+                userAnswers[questionIndex] = optionIndex; // Marcar la respuesta
+            }
+            // Actualizar visualmente el estado del radio button
+            const radioInput = document.querySelector(`input[name='q${questionIndex}'][value='${optionIndex}']`);
+            if (radioInput) {
+                radioInput.checked = (userAnswers[questionIndex] === optionIndex);
+            }
+        }
+
+        // Guardar respuesta
         function saveAnswer(index) {
             const selected = document.querySelector(`input[name='q${index}']:checked`);
             if (selected) {
@@ -820,6 +2203,7 @@
             }
         }
 
+        // Siguiente pregunta
         function nextQuestion() {
             saveAnswer(currentQuestionIndex);
             if (currentQuestionIndex < currentExam.length - 1) {
@@ -831,6 +2215,7 @@
             }
         }
 
+        // Pregunta anterior
         function prevQuestion() {
             saveAnswer(currentQuestionIndex);
             if (currentQuestionIndex > 0) {
@@ -840,6 +2225,7 @@
             }
         }
 
+        // Mostrar pantalla de carga
         function showLoadingScreen() {
             document.getElementById("quizContainer").style.display = "none";
             document.getElementById("loadingScreen").style.display = "block";
@@ -858,21 +2244,22 @@
             let messageIndex = 0;
 
             const interval = setInterval(() => {
-                progress += Math.random() * 10; // Incremento aleatorio
+                progress += Math.random() * 10;
                 progressBar.style.width = `${Math.min(progress, 100)}%`;
 
                 if (progress >= 100) {
                     clearInterval(interval);
                     setTimeout(() => {
                         showResults();
-                    }, 2000); // Esperar 2 segundos adicionales
+                    }, 2000);
                 } else if (progress % 25 === 0) {
                     messagesElement.textContent = messages[messageIndex];
                     messageIndex = (messageIndex + 1) % messages.length;
                 }
-            }, 800); // 8 segundos en total
+            }, 800);
         }
 
+        // Mostrar resultados
         function showResults() {
             document.getElementById("loadingScreen").style.display = "none";
             document.getElementById("result").style.display = "block";
@@ -881,42 +2268,102 @@
             let wrongAnswers = 0;
             let summaryHTML = "";
             
+            // Preparar datos para guardar en el historial
+            const resultData = {
+                examName: document.getElementById("examDescription").textContent,
+                timestamp: Date.now(),
+                totalQuestions: currentExam.length,
+                correctAnswers: 0,
+                score: 0,
+                questions: []
+            };
+            
             currentExam.forEach((q, index) => {
                 const answer = userAnswers[index];
+                const questionData = {
+                    questionText: q.text,
+                    options: [...q.options],
+                    userAnswer: answer,
+                    correctAnswer: q.correct
+                };
+                
                 if (answer !== null) {
                     if (answer === q.correct) {
                         correctAnswers++;
-                        summaryHTML += `<li>✔️ Pregunta ${index + 1}: ${q.text}</li>`;
+                        summaryHTML += `<li class="correct-answer">✔️ Pregunta ${index + 1}: ${q.text}</li>`;
                     } else {
                         wrongAnswers++;
-                        summaryHTML += `<li>❌ Pregunta ${index + 1}: ${q.text}<br>
-                        <strong>Tu respuesta:</strong> ${q.options[answer] || "No respondida"} <br>
+                        summaryHTML += `<li class="incorrect-answer">❌ Pregunta ${index + 1}: ${q.text}<br>
+                        <strong>Tu respuesta:</strong> ${q.options[answer]}<br>
                         <strong>Respuesta correcta:</strong> ${q.options[q.correct]}</li>`;
                     }
+                } else {
+                    summaryHTML += `<li>🧻 Pregunta ${index + 1}: ${q.text}<br>
+                    <strong>No respondida</strong><br>
+                    <strong>Respuesta correcta:</strong> ${q.options[q.correct]}</li>`;
                 }
+                
+                resultData.questions.push(questionData);
             });
             
+            // Cambio importante aquí: Permitir notas negativas eliminando Math.max(0, ...)
             let score = (10 / currentExam.length) * correctAnswers - (5 / currentExam.length) * wrongAnswers;
-            score = score.toFixed(2);  // Permitimos notas negativas
+            score = score.toFixed(2); // Ahora permite valores negativos
+            
+            resultData.correctAnswers = correctAnswers;
+            resultData.score = score;
+            
+            // Guardar resultado en el historial
+            examResults.unshift(resultData);
+            if (examResults.length > 10) {
+                examResults = examResults.slice(0, 10); // Mantener solo los 10 últimos resultados
+            }
+            saveResults();
+            updateResultsList();
             
             document.getElementById("score").innerText = `Tu nota es: ${score}/10. Respuestas correctas: ${correctAnswers}/${currentExam.length}`;
             document.getElementById("summary").innerHTML = summaryHTML;
-            document.getElementById("restartButton").disabled = false;
         }
 
+        // Actualizar barra de progreso
         function updateProgressBar() {
             const progress = ((currentQuestionIndex + 1) / currentExam.length) * 100;
             document.getElementById("progress").style.width = `${progress}%`;
         }
 
-        function restartExam() {
-            currentQuestionIndex = 0;
-            userAnswers = new Array(currentExam.length).fill(null);
-            document.getElementById("quizContainer").style.display = "block";
-            document.getElementById("result").style.display = "none";
-            updateProgressBar();
-            loadQuestion(currentQuestionIndex);
-        }
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            
+            // Verificar si hay un usuario logueado
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('userAvatar').src = currentUser.avatar || 'https://lh3.googleusercontent.com/a/default-user';
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userInfo').style.display = 'flex';
+                loadUserData(currentUser.id);
+            } else {
+                document.getElementById('userInfo').style.display = 'none';
+            }
+            
+            document.getElementById('configButton').addEventListener('click', toggleConfigMenu);
+            document.getElementById('resultsButton').addEventListener('click', toggleResultsMenu);
+            
+            document.getElementById('themeSelect').addEventListener('change', (e) => {
+                applyTheme(e.target.value);
+                saveSettings();
+            });
+            
+            document.getElementById('shuffleAnswers').addEventListener('change', saveSettings);
+            
+            // Inicializar Google Sign-In después de que cargue la librería
+            setTimeout(() => {
+                if (typeof google !== 'undefined') {
+                    initializeGoogleSignIn();
+                }
+            }, 1000);
+        });
     </script>
 </body>
 </html>
