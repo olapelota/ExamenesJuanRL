@@ -6,6 +6,8 @@
     <title>Exámenes tipo test 1º SMR</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
@@ -21,6 +23,8 @@
             --menu-border: rgba(255, 255, 255, 0.1);
             --select-bg: rgba(255, 255, 255, 0.9);
             --select-text: #333;
+            --timer-warning: #FF9800;
+            --timer-critical: #F44336;
         }
 
         .dark-theme {
@@ -34,6 +38,8 @@
             --menu-border: rgba(255, 255, 255, 0.05);
             --select-bg: rgba(50, 50, 50, 0.9);
             --select-text: #f0f0f0;
+            --timer-warning: #FFC107;
+            --timer-critical: #E53935;
         }
 
         body {
@@ -117,7 +123,13 @@
             100% { transform: rotate(360deg); }
         }
 
-        .exam-button, #startScreen button {
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .exam-button, #startScreen button, .custom-exam-button {
             margin: 10px;
             padding: 15px 30px;
             font-size: 16px;
@@ -128,19 +140,23 @@
             cursor: pointer;
             transition: all 0.3s ease;
             -webkit-font-smoothing: antialiased;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .exam-button:hover, #startScreen button:hover {
+        .exam-button:hover, #startScreen button:hover, .custom-exam-button:hover {
             background: var(--button-hover);
             transform: scale(1.05);
         }
 
-        #startScreen, #quizContainer, #result, #loadingScreen {
+        #startScreen, #quizContainer, #result, #loadingScreen, #customExamCreator, #customExamsList {
             display: none;
         }
 
         .question-container {
             margin-bottom: 20px;
+            text-align: left;
         }
 
         .question-container label {
@@ -196,6 +212,7 @@
             background: var(--button-bg);
             border-radius: 5px;
             margin-bottom: 20px;
+            position: relative;
         }
 
         #progress {
@@ -204,6 +221,25 @@
             border-radius: 5px;
             width: 0;
             transition: width 0.3s ease;
+        }
+
+        #timer {
+            position: absolute;
+            right: 10px;
+            top: -30px;
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        #timer.warning {
+            color: var(--timer-warning);
+            animation: pulse 1s infinite;
+        }
+
+        #timer.critical {
+            color: var(--timer-critical);
+            animation: pulse 0.5s infinite;
         }
 
         .floating-button {
@@ -327,6 +363,7 @@
             color: var(--text-color);
             text-decoration: none;
             transition: all 0.3s ease;
+            font-size: 14px;
         }
 
         .top-buttons a:hover {
@@ -406,7 +443,7 @@
             cursor: pointer;
         }
 
-        .config-menu select {
+        .config-menu select, .config-menu input {
             background: var(--select-bg);
             color: var(--select-text);
             border: 1px solid var(--menu-border);
@@ -417,7 +454,7 @@
             width: 100%;
         }
 
-        .config-menu select:hover {
+        .config-menu select:hover, .config-menu input:hover {
             background: var(--button-hover);
         }
 
@@ -559,6 +596,243 @@
             transform: scale(1.05);
         }
 
+        /* Timer Modal Styles */
+        .timer-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-color);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--menu-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            max-width: 300px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            animation: expandAnimation 0.3s ease forwards;
+        }
+
+        .timer-modal h3 {
+            margin-top: 0;
+            color: var(--text-color);
+        }
+
+        .timer-modal p {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .timer-modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+        }
+
+        .timer-modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .timer-modal-buttons button:hover {
+            transform: scale(1.05);
+        }
+
+        .timer-modal-buttons button:first-child {
+            background: var(--incorrect-color);
+            color: white;
+        }
+
+        .timer-modal-buttons button:last-child {
+            background: var(--correct-color);
+            color: white;
+        }
+
+        /* Custom Exam Creator Styles */
+        #customExamCreator {
+            text-align: left;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        #customExamCreator h2 {
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--menu-border);
+            background: var(--select-bg);
+            color: var(--select-text);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .option-row input[type="radio"] {
+            width: auto;
+        }
+
+        .option-row input[type="text"] {
+            flex: 1;
+        }
+
+        .option-row button {
+            background: var(--incorrect-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .add-option-btn {
+            background: var(--correct-color) !important;
+            width: 100% !important;
+            margin-top: 5px;
+        }
+
+        .question-list {
+            margin-top: 20px;
+        }
+
+        .question-item {
+            background: var(--button-bg);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .question-item p {
+            margin: 5px 0;
+        }
+
+        .question-item button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--incorrect-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+        }
+
+        .creator-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .creator-buttons button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: var(--button-bg);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .creator-buttons button:hover {
+            background: var(--button-hover);
+            transform: scale(1.05);
+        }
+
+        /* Custom Exams List */
+        #customExamsList {
+            text-align: left;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .custom-exam-item {
+            background: var(--button-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-exam-item:hover {
+            background: var(--button-hover);
+            transform: scale(1.01);
+        }
+
+        .custom-exam-item h3 {
+            margin-top: 0;
+        }
+
+        .custom-exam-item p {
+            margin: 5px 0;
+        }
+
+        .custom-exam-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .custom-exam-actions button {
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-exam-actions button:first-child {
+            background: var(--correct-color);
+            color: white;
+        }
+
+        .custom-exam-actions button:last-child {
+            background: var(--incorrect-color);
+            color: white;
+        }
+
+        .custom-exam-actions button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Footer */
         .footer {
             position: fixed;
             bottom: 10px;
@@ -599,24 +873,101 @@
         }
 
         /* Responsive adjustments */
-        @media (max-width: 500px) {
+        @media (max-width: 768px) {
             .container {
                 width: 95%;
                 padding: 15px;
+                margin: 10px 0;
+                max-height: 85vh;
             }
             
-            .exam-button, #startScreen button {
+            .exam-button, #startScreen button, .custom-exam-button {
                 padding: 12px 20px;
                 font-size: 14px;
             }
             
             .top-buttons a {
                 padding: 8px 12px;
-                font-size: 14px;
+                font-size: 12px;
             }
             
             .config-menu, .results-menu {
                 max-width: 250px;
+            }
+            
+            .timer-modal {
+                max-width: 90%;
+            }
+            
+            .question-container label {
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            .buttons button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .footer {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-buttons {
+                flex-direction: column;
+                gap: 5px;
+                top: 10px;
+            }
+            
+            .top-buttons a {
+                width: 100%;
+                text-align: center;
+                padding: 6px;
+            }
+            
+            .config-menu, .results-menu {
+                max-width: 90%;
+                left: 5%;
+            }
+            
+            .floating-button {
+                width: 40px;
+                height: 40px;
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            .floating-button.left {
+                left: 15px;
+            }
+            
+            .start-buttons, .creator-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .start-buttons button, .creator-buttons button {
+                width: 100%;
+            }
+            
+            .custom-exam-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .custom-exam-actions button {
+                width: 100%;
+            }
+            
+            .timer-modal-buttons {
+                flex-direction: column;
             }
         }
     </style>
@@ -642,13 +993,16 @@
             <button class="exam-button" onclick="loadCategory('SI')">Exámenes SI</button>
             <button class="exam-button" onclick="loadCategory('IPEI')">Exámenes IPEI</button>
             <button class="exam-button" onclick="loadCategory('IP')">Exámenes IP</button>
+            <button class="exam-button" onclick="loadCategory('customExams')">Exámenes Personalizados</button>
         </div>
 
         <!-- Exámenes SOM -->
         <div id="SOM" class="category-menu">
             <h2>Exámenes de Comandos de Linux (SOM)</h2>
-            <button class="exam-button" onclick="loadExam('SOMIntermedio')">Examen Intermedio</button>
-            <button class="exam-button" onclick="loadExam('SOMDificil')">Examen Difícil</button>
+            <button class="exam-button" onclick="loadExam('SOM5A')">Unidad 5 - Examen A (Fácil)</button>
+            <button class="exam-button" onclick="loadExam('SOM5B')">Unidad 5 - Examen B (Intermedio)</button>
+            <button class="exam-button" onclick="loadExam('SOM5C')">Unidad 5 - Examen C (Difícil)</button>
+            <button class="exam-button" onclick="loadExam('SOM6A')">Unidad 6 - Examen A (Fácil)</button>
             <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
         </div>
 
@@ -664,9 +1018,9 @@
         <!-- Exámenes SI -->
         <div id="SI" class="category-menu">
             <h2>Exámenes de Sistemas Informáticos (SI)</h2>
-            <button class="exam-button" onclick="loadExam('SIBasico')">Examen Básico</button>
-            <button class="exam-button" onclick="loadExam('SIGestionUsuarios')">Gestión de Usuarios</button>
-            <button class="exam-button" onclick="loadExam('SIComandosAvanzados')">Comandos Avanzados</button>
+            <button class="exam-button" onclick="loadExam('SIPythonA')">Python - Nivel Fácil</button>
+            <button class="exam-button" onclick="loadExam('SIPythonB')">Python - Nivel Intermedio</button>
+            <button class="exam-button" onclick="loadExam('SIPythonC')">Python - Nivel Difícil</button>
             <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
         </div>
 
@@ -681,9 +1035,48 @@
 
         <!-- Exámenes IP -->
         <div id="IP" class="category-menu">
-            <h2>Exámenes de Vocabulario (IP)</h2>
-            <button class="exam-button" onclick="loadExam('IPVocabulario')">Examen de Vocabulario</button>
+            <h2>Exámenes de Inglés (IP)</h2>
+            <button class="exam-button" onclick="loadExam('IPPastContinuous')">Past Continuous - Intermediate</button>
             <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
+        </div>
+
+        <!-- Exámenes Personalizados -->
+        <div id="customExams" class="category-menu">
+            <h2>Exámenes Personalizados</h2>
+            <button class="exam-button" onclick="showCustomExamsList()">Mis Exámenes</button>
+            <button class="exam-button" onclick="showCustomExamCreator()">Crear Nuevo Examen</button>
+            <button class="exam-button" onclick="backToMainMenu()">Volver al menú principal</button>
+        </div>
+
+        <!-- Lista de exámenes personalizados -->
+        <div id="customExamsList">
+            <h2>Mis Exámenes Personalizados</h2>
+            <div id="customExamsContainer"></div>
+            <button class="exam-button" onclick="backToCustomExamsMenu()">Volver</button>
+        </div>
+
+        <!-- Creador de exámenes personalizados -->
+        <div id="customExamCreator">
+            <h2>Creador de Exámenes Personalizados</h2>
+            <div class="form-group">
+                <label for="examTitle">Título del Examen:</label>
+                <input type="text" id="examTitle" placeholder="Ej: Examen de Repaso Final">
+            </div>
+            <div class="form-group">
+                <label for="examDescription">Descripción:</label>
+                <textarea id="examDescription" placeholder="Ej: Este examen cubre los temas 1 al 5"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Preguntas:</label>
+                <div id="questionsContainer"></div>
+                <button class="add-option-btn" onclick="addNewQuestion()">+ Añadir Pregunta</button>
+            </div>
+            
+            <div class="creator-buttons">
+                <button onclick="saveCustomExam()">Guardar Examen</button>
+                <button onclick="backToCustomExamsMenu()">Cancelar</button>
+            </div>
         </div>
 
         <!-- Pantalla de inicio del examen -->
@@ -691,6 +1084,7 @@
             <h2>Bienvenido al Examen Tipo Test</h2>
             <p id="examDescription"></p>
             <p>Este examen consta de <strong><span id="totalQuestions"></span> preguntas</strong>. Cada pregunta correcta suma <strong><span id="pointsPerCorrect"></span></strong> puntos y cada incorrecta resta <strong><span id="pointsPerIncorrect"></span></strong> puntos.</p>
+            <p id="examTimeInfo" style="display: none;">Tienes <strong><span id="examTimeLimit"></span> minutos</strong> para completar el examen.</p>
             <div class="start-buttons">
                 <button onclick="backToCategoryMenu()">Volver al menú de categoría</button>
                 <button onclick="startExam()">Comenzar Examen</button>
@@ -701,6 +1095,7 @@
         <div id="quizContainer">
             <div id="progressBar">
                 <div id="progress"></div>
+                <div id="timer"></div>
             </div>
             <div id="questions"></div>
             <div class="buttons">
@@ -723,7 +1118,20 @@
             <h3>Resultados</h3>
             <p id="score"></p>
             <ul id="summary"></ul>
-            <button class="exam-button" onclick="backToCategoryMenu()">Volver al menú de categoría</button>
+            <div class="buttons">
+                <button class="exam-button" onclick="backToCategoryMenu()">Volver al menú de categoría</button>
+                <button class="exam-button" onclick="exportToPDF()">Exportar a PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de tiempo agotado -->
+    <div class="timer-modal" id="timerModal">
+        <h3>¡Tiempo Agotado!</h3>
+        <p>El tiempo para completar el examen ha finalizado. ¿Deseas enviar tus respuestas ahora?</p>
+        <div class="timer-modal-buttons">
+            <button onclick="submitExam()">Enviar Respuestas</button>
+            <button onclick="continueInStudyMode()">Continuar en Modo Estudio</button>
         </div>
     </div>
 
@@ -736,6 +1144,17 @@
         <label>
             <input type="checkbox" id="shuffleAnswers" checked> Mezclar respuestas
         </label>
+        
+        <label for="examMode">Modo de Examen:</label>
+        <select id="examMode">
+            <option value="study">Modo Estudio (Sin tiempo)</option>
+            <option value="exam">Modo Examen (Con tiempo)</option>
+        </select>
+        
+        <div id="examTimeSettings" style="display: none;">
+            <label for="examTime">Tiempo del examen (minutos):</label>
+            <input type="number" id="examTime" min="1" max="120" value="30">
+        </div>
         
         <label for="themeSelect">Tema:</label>
         <select id="themeSelect">
@@ -771,1599 +1190,1167 @@
     <script>
         // Objeto con todos los exámenes completos
         const exams = {
-            // Exámenes SOM (Comandos de Linux)
-            SOMIntermedio: {
-                description: "Examen intermedio de comandos de Linux.",
+            // Exámenes SOM (Comandos de Linux) - Unidad 5
+            SOM5A: {
+                description: "Unidad 5: Linux. Gestión de usuarios, grupos, permisos y procesos - Examen 5A (Nivel Fácil)",
                 questions: [
                     { 
-                        text: "¿Qué comando se utiliza para crear un directorio en Linux?", 
-                        options: ["mkdir", "touch", "ls", "cd"], 
+                        text: "¿Qué comando se utiliza para crear un nuevo usuario en Linux?", 
+                        options: ["useradd", "addgroup", "mkuser", "newuser"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando se utiliza para listar el contenido de un directorio en Linux?", 
-                        options: ["list", "ls", "dir", "show"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para crear un archivo vacío en Linux?", 
-                        options: ["mkdir", "touch", "echo", "cat"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para mostrar un mensaje en la terminal respetando las comillas?", 
-                        options: ["print", "echo", "show", "display"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para listar todos los archivos en un directorio, incluyendo los ocultos?", 
-                        options: ["ls -a", "ls -l", "ls -h", "ls -R"], 
+                        text: "¿En qué fichero se almacenan las cuentas de usuario del sistema?", 
+                        options: ["/etc/passwd", "/etc/groups", "/home/users", "/var/log/users"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando se utiliza para listar archivos en orden inverso?", 
-                        options: ["ls -r", "ls -R", "ls -t", "ls -l"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para buscar archivos que comiencen con la letra 'e' en el directorio /bin?", 
-                        options: ["find /bin -name 'e*'", "ls /bin/e*", "grep /bin 'e*'", "search /bin 'e*'"], 
+                        text: "Un usuario con UID 0 es:", 
+                        options: ["Un usuario normal", "El administrador (root)", "Un usuario invitado", "Un servicio del sistema"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Qué comando se utiliza para mostrar las últimas 2 líneas de un archivo?", 
-                        options: ["head -n 2", "tail -n 2", "cat -n 2", "echo -n 2"], 
+                        text: "El comando passwd sirve para:", 
+                        options: ["Cambiar permisos de archivos", "Asignar contraseñas a usuarios", "Crear nuevos grupos", "Listar procesos"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Qué comando se utiliza para crear un directorio dentro de otro directorio?", 
-                        options: ["mkdir -p", "mkdir", "cd", "touch"], 
+                        text: "¿Cómo se agrega un usuario al grupo 'developers'?", 
+                        options: ["usermod -aG developers usuario", "adduser developers usuario", "groupadd -u developers usuario", "newgroup -a usuario developers"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando se utiliza para mostrar las primeras 4 líneas de un archivo?", 
-                        options: ["head -n 4", "tail -n 4", "cat -n 4", "echo -n 4"], 
+                        text: "El fichero que define los grupos del sistema es:", 
+                        options: ["/etc/shadow", "/etc/passwd", "/etc/group", "/etc/gshadow"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué permiso se representa con la letra 'r'?", 
+                        options: ["Ejecutar", "Escribir", "Leer", "Eliminar"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál de estos comandos muestra los permisos de un archivo?", 
+                        options: ["ls -l", "chmod -v", "perm", "showperm"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para hacer un archivo ejecutable, se usa:", 
+                        options: ["chmod +x archivo", "chmod u=r archivo", "chmod 644 archivo", "chmod -r archivo"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Un proceso zombie es aquel que:", 
+                        options: ["Consume mucha CPU", "Ha terminado pero su padre no ha leído su estado", "Está en modo suspensión", "Está esperando I/O"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué comando lista los procesos en ejecución?", 
+                        options: ["ps", "top", "jobs", "list"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para eliminar un proceso por su PID se usa:", 
+                        options: ["kill PID", "stop PID", "rm PID", "end PID"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El comando top muestra:", 
+                        options: ["Procesos en segundo plano", "Estado en tiempo real de procesos y recursos", "Sólo procesos con CPU alta", "Sólo procesos zombies"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cómo cambiar al usuario root?", 
+                        options: ["su", "login root", "sudo root", "switch user"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "sudo permite:", 
+                        options: ["Ejecutar comandos como otro usuario", "Cambiar la contraseña de root", "Modificar ficheros del sistema sin permisos", "Listar usuarios con privilegios"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El identificador de grupo (GID) se define en:", 
+                        options: ["/etc/passwd", "/etc/group", "/etc/gshadow", "/var/groups"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué bit especial otorga permisos de ejecución con identidad de propietario?", 
+                        options: ["Sticky bit", "Setuid", "Setgid", "SUID bit"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "El comando chmod 755 archivo da permisos:", 
+                        options: ["rwx r-x r-x", "rw- rw- r--", "r-x r-x r-x", "rw- r-- r--"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para ver detalles de un proceso en ejecución se usa:", 
+                        options: ["ps aux", "lsproc", "procinfo", "info ps"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Un proceso en segundo plano se lanza añadiendo:", 
+                        options: ["& al final del comando", "bg al inicio", "nohup", "& al inicio del comando"], 
                         correct: 0
                     }
                 ]
             },
-            SOMDificil: {
-                description: "Examen difícil de comandos de Linux.",
+            SOM5B: {
+                description: "Unidad 5: Linux. Gestión de usuarios, grupos, permisos y procesos - Examen 5B (Nivel Intermedio)",
                 questions: [
                     { 
-                        text: "¿Qué comando se utiliza para buscar archivos que comiencen con 'nt' y terminen con 'e' en el directorio /bin?", 
-                        options: ["ls /bin/nt*e", "find /bin -name 'nt*e'", "grep /bin 'nt*e'", "search /bin 'nt*e'"], 
+                        text: "¿Cuál es la utilidad de /etc/shadow?", 
+                        options: ["Almacenar contraseñas cifradas de usuarios", "Definir grupos del sistema", "Listar procesos abiertos", "Configurar servicios de arranque"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando se utiliza para buscar archivos que comiencen con 'z', tengan una letra intermedia y terminen con 'grep' en el directorio /bin?", 
-                        options: ["ls /bin/z?grep", "find /bin -name 'z?grep'", "grep /bin 'z?grep'", "search /bin 'z?grep'"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para buscar archivos que terminen en un número en el directorio /sbin?", 
-                        options: ["ls /sbin/*[0-9]", "find /bin -name '*[0-9]'", "grep /bin '*[0-9]'", "search /bin '*[0-9]'"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para buscar archivos que comiencen con 'system' o 'ntfs' en el directorio /bin?", 
-                        options: ["ls /bin/{system*,ntfs*}", "find /bin -name 'system*' -o -name 'ntfs*'", "grep /bin 'system*|ntfs*'", "search /bin 'system*|ntfs*'"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para buscar archivos que contengan la palabra 'me' o 'mo' en el directorio /bin?", 
-                        options: ["grep -E 'me|mo' /bin/*", "find /bin -name '*me*' -o -name '*mo*'", "ls /bin/*me* /bin/*mo*", "search /bin 'me|mo'"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para mostrar las últimas 2 líneas del archivo /etc/passwd?", 
-                        options: ["tail -n 2 /etc/passwd", "head -n 2 /etc/passwd", "cat -n 2 /etc/passwd", "echo -n 2 /etc/passwd"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para mostrar las primeras 4 líneas del archivo /etc/passwd?", 
-                        options: ["head -n 4 /etc/passwd", "tail -n 4 /etc/passwd", "cat -n 4 /etc/passwd", "echo -n 4 /etc/passwd"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para listar archivos que comiencen con 'try' y tengan exactamente 5 caracteres en el directorio /dev?", 
-                        options: ["ls /dev/try??", "find /dev -name 'try??'", "grep /dev 'try??'", "search /dev 'try??'"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para listar archivos que comiencen con 'try' y terminen en 1, 2, 3 o 4 en el directorio /dev?", 
-                        options: ["ls /dev/try*[1-4]", "find /dev -name 'try*[1-4]'", "grep /dev 'try*[1-4]'", "search /dev 'try*[1-4]'"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para listar todos los archivos, incluyendo los ocultos, en el directorio raíz?", 
-                        options: ["ls -a /", "ls -l /", "ls -R /", "ls -h /"], 
-                        correct: 0
-                    }
-                ]
-            },
-            // Exámenes RL (Redes)
-            RLFacil: {
-                description: "Examen fácil de redes.",
-                questions: [
-                    { 
-                        text: "¿Cuántos bits tiene una dirección IPv4?", 
-                        options: ["32", "64", "128", "256"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué clase de dirección IP tiene el rango 192.0.0.0 a 223.255.255.255?", 
-                        options: ["Clase A", "Clase B", "Clase C", "Clase D"], 
+                        text: "¿Cómo se bloquea una cuenta de usuario?", 
+                        options: ["usermod -L usuario", "passwd -l usuario", "both A y B", "lockuser usuario"], 
                         correct: 2
                     },
                     { 
-                        text: "¿Qué máscara de red se usa comúnmente en redes de clase C?", 
-                        options: ["255.0.0.0", "255.255.0.0", "255.255.255.0", "255.255.255.255"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Qué protocolo se utiliza para transferir información entre dispositivos en la red?", 
-                        options: ["HTTP", "FTP", "IP", "DNS"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Qué dirección IP pertenece a la clase A?", 
-                        options: ["10.0.0.1", "172.16.0.1", "192.168.1.1", "224.0.0.1"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué dirección IP es privada?", 
-                        options: ["192.168.1.1", "8.8.8.8", "172.32.0.1", "169.254.0.1"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para ver la configuración actual de un router?", 
-                        options: ["show running-config", "show startup-config", "show version", "show interfaces"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué protocolo se utiliza para el enrutamiento en la capa de red?", 
-                        options: ["IP", "TCP", "UDP", "OSPF"], 
+                        text: "En la máscara de permisos umask, un valor 022 implica:", 
+                        options: ["ficheros rw-r--r--", "ficheros rwxrwxrwx", "directorios rwxr-xr-x", "both A y C"], 
                         correct: 3
                     },
                     { 
-                        text: "¿Qué máscara de red se usa en una red con 254 hosts?", 
-                        options: ["255.255.255.0", "255.255.0.0", "255.0.0.0", "255.255.255.255"], 
+                        text: "chown sirve para:", 
+                        options: ["Cambiar propietario y grupo de un fichero", "Cambiar sólo grupo", "Cambiar permisos", "Cambiar nombre"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué dirección IP es de clase B?", 
-                        options: ["172.16.0.1", "10.0.0.1", "192.168.1.1", "224.0.0.1"], 
+                        text: "Para cambiar el grupo asociado a un usuario sin afectar otros, se usa:", 
+                        options: ["usermod -g grupo usuario", "groupmod usuario grupo", "chgrp usuario grupo", "groupadd usuario grupo"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué dirección IP es de loopback?", 
-                        options: ["127.0.0.1", "192.168.1.1", "169.254.0.1", "10.0.0.1"], 
+                        text: "El bit sticky en un directorio asegura que:", 
+                        options: ["Solo el propietario puede renombrar/eliminar sus archivos", "El directorio es de solo lectura", "Los archivos no puedan ser modificados", "Permisos especiales de grupo"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando se utiliza para acceder al modo privilegiado en un router?", 
-                        options: ["enable", "configure terminal", "hostname", "show running-config"], 
+                        text: "¿Qué hace ps -ef | grep nombre?", 
+                        options: ["Filtra procesos por nombre", "Muestra todos los usuarios", "Listado de archivos en /proc", "Detalla permisos de procesos"], 
                         correct: 0
-                    }
-                ]
-            },
-            RLIntermedio: {
-                description: "Examen intermedio de redes.",
-                questions: [
+                    },
                     { 
-                        text: "¿Qué es el subnetting?", 
-                        options: ["La unión de varias redes en una sola", "La subdivisión de una red grande en redes más pequeñas", "El proceso de encriptar direcciones IP", "La conversión de direcciones IPv4 a IPv6"], 
+                        text: "¿Cuál es la diferencia principal entre kill y kill -9?", 
+                        options: ["kill -9 fuerza la terminación inmediata", "kill -9 reinicia el proceso", "kill -9 ignora permisos", "kill -9 pausa el proceso"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando cambia la prioridad de un proceso vivo?", 
+                        options: ["nice", "renice", "tpwr", "prio"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Cuál es uno de los objetivos principales del subnetting?", 
-                        options: ["Aumentar la cantidad de direcciones IP públicas", "Optimizar el uso de direcciones IP y reducir el tráfico de broadcast", "Eliminar la necesidad de routers", "Convertir direcciones en formato binario"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "En el subnetting, ¿qué significa 'tomar prestados' bits?", 
-                        options: ["Utilizar bits de la porción de red para aumentar el número de hosts", "Utilizar bits de la porción de host para crear subredes", "Transferir bits entre diferentes protocolos", "Copiar bits de una dirección IP a otra"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Si se tiene la red 192.168.1.0/24 y se desea dividir en 4 subredes de igual tamaño, ¿cuál será la nueva máscara?", 
-                        options: ["/25", "/26", "/27", "/28"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "¿Qué representa la parte 'host' en una dirección IP?", 
-                        options: ["La identificación única del dispositivo en la subred", "La dirección del router", "El segmento de la dirección que indica la red", "La suma de todas las subredes disponibles"], 
+                        text: "A un nuevo script shell, para que sea ejecutable debe:", 
+                        options: ["Tener shebang y permiso +x", "Estar en /usr/bin", "Ser propiedad de root", "Tener extensión .sh"], 
                         correct: 0
                     },
                     { 
-                        text: "En el ejemplo del instituto, ¿cuál es una posible división al aplicar subnetting a 192.168.1.0/24?", 
-                        options: ["192.168.1.0/26, 192.168.1.64/26, 192.168.1.128/26, 192.168.1.192/26", "192.168.1.0/25 y 192.168.1.128/25", "192.168.1.0/27, 192.168.1.32/27, 192.168.1.64/27, 192.168.1.96/27", "192.168.1.0/28, 192.168.1.16/28, 192.168.1.32/28, 192.168.1.48/28"], 
+                        text: "El fichero /proc:", 
+                        options: ["Contiene información de procesos en tiempo real", "Guarda logs del sistema", "Configura servicios", "Almacena usuarios"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Cuál es la principal ventaja de segmentar una red mediante subnetting?", 
-                        options: ["Aumenta la velocidad de los enlaces físicos", "Reduce la cantidad de tráfico de broadcast en cada subred", "Permite el uso exclusivo de direcciones IPv6", "Elimina la necesidad de máscaras de subred"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Una vez aplicados los bits de subred a la máscara inicial, ¿qué información se debe calcular para cada subred?", 
-                        options: ["Dirección de red, dirección de broadcast, rango de IP's para host y cantidad de IP's disponibles", "La velocidad de transmisión", "La dirección MAC de cada dispositivo", "El número de VLANs necesarias"], 
+                        text: "Para visualizar la jerarquía de procesos se usa:", 
+                        options: ["pstree", "treeps", "pshier", "proctree"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Cuál de las siguientes opciones NO es un beneficio del subnetting?", 
-                        options: ["Optimización del uso de direcciones IP", "Mejora en la seguridad al aislar segmentos de red", "Incremento del tráfico de broadcast", "Mejor administración de la red"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Qué efecto tiene el subnetting en el dominio de broadcast de una red?", 
-                        options: ["Lo amplía", "Lo reduce", "Lo elimina", "No tiene ningún efecto"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "En el proceso de subnetting, ¿qué se entiende por 'máscara de red ampliada'?", 
-                        options: ["La máscara original sin modificaciones", "La nueva máscara que resulta al sumar los bits prestados", "La conversión de la máscara a formato hexadecimal", "La máscara que se utiliza para el enrutamiento inter-VLAN"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Cuando se aplica subnetting, ¿qué se debe verificar en base a los cálculos realizados?", 
-                        options: ["Verificar que la suma de bits de subred y host sea igual a 32 y que el número resultante de hosts por subred sea mayor que cero", "Confirmar que se está usando la versión correcta de IPv6", "Comprobar que la dirección de loopback está incluida en cada subred", "Verificar que no se hayan tomado prestados bits de la parte de red"], 
+                        text: "¿Qué significa un proceso defunct?", 
+                        options: ["Un proceso zombie", "Un demonio", "Un proceso con alta CPU", "Un proceso terminado correctamente"], 
                         correct: 0
                     },
                     { 
-                        text: "En un escenario de router-on-a-stick, ¿cuál es la importancia de la encapsulación dot1Q en las subinterfaces del router?", 
-                        options: ["Permite asignar direcciones IP de forma dinámica", "Identifica y etiqueta el tráfico de cada VLAN para que el router pueda distinguirlo", "Aumenta la velocidad de la red al reducir el tamaño de las tramas", "Convierte el tráfico multicast en unicast"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Comparando enrutamiento tradicional e inter-VLAN mediante router-on-a-stick, ¿cuál es una de las principales desventajas del método tradicional?", 
-                        options: ["Requiere múltiples interfaces físicas en el router, lo que incrementa el costo y la complejidad", "No permite la segmentación de la red", "Utiliza encapsulación dot1Q de forma ineficiente", "Solo es aplicable a redes pequeñas"], 
+                        text: "El comando chmod g+s directorio:", 
+                        options: ["Aplica setgid en el directorio", "Quita permisos de grupo", "Crea un grupo nuevo", "Cambia propietario"], 
                         correct: 0
                     },
                     { 
-                        text: "En la configuración de enrutamiento inter-VLAN, ¿por qué es imprescindible habilitar la interfaz física del router con el comando 'no shutdown'?", 
-                        options: ["Porque las subinterfaces heredan el estado de la interfaz física y si está deshabilitada, no se transmite tráfico", "Para evitar conflictos en la tabla ARP", "Para activar la encriptación en las subinterfaces", "Porque el comando 'no shutdown' configura automáticamente las direcciones IP"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "Al dividir una red utilizando máscaras de subred de tamaño fijo, ¿cuál es la principal limitación de esta técnica?", 
-                        options: ["No permite variabilidad en el número de hosts por subred, lo que puede resultar en desperdicio de direcciones", "Incrementa el tráfico de broadcast", "Solo es aplicable a redes IPv6", "Exige el uso de protocolos de encriptación avanzados"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En el Ejemplo 1, ¿cómo se determina el rango de IP's asignables a hosts en cada subred?", 
-                        options: ["Restando la dirección de red y de broadcast del total de direcciones en la subred", "Sumando 2 a la dirección de red", "Multiplicando el número de bits de host por 2", "Dividiendo el número total de direcciones entre el número de subredes"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "Si se tuviera que diseñar una red para 50 hosts utilizando subnetting, ¿cuál de las siguientes máscaras sería la más adecuada para evitar desperdicios excesivos?", 
-                        options: ["/24", "/26", "/28", "/30"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "En un escenario en el que se requiere enrutamiento inter-VLAN, ¿qué ventajas ofrece la configuración 'router-on-a-stick' frente a la configuración tradicional?", 
-                        options: ["Menor costo en equipos al requerir solo una interfaz física para múltiples VLAN y una configuración más sencilla", "Mayor ancho de banda dedicado a cada VLAN", "Eliminación completa de la necesidad de subinterfaces", "Configuración automática sin necesidad de comandos manuales"], 
-                        correct: 0
-                    }
-                ]
-            },
-            RLDificil: {
-                description: "Examen difícil de redes.",
-                questions: [
-                    { 
-                        text: "Para dividir la red 192.168.10.0/24 en 4 subredes de igual tamaño, ¿cuál es el proceso correcto para determinar la nueva máscara y el número de hosts por subred?", 
-                        options: ["Tomar 1 bit para subredes y usar máscara /25, resultando en 126 hosts por subred", "Tomar 2 bits para subredes, resultando en máscara /26 y 62 hosts útiles por subred", "Tomar 3 bits para subredes, resultando en máscara /27 y 30 hosts útiles por subred", "Tomar 4 bits para subredes, resultando en máscara /28 y 14 hosts útiles por subred"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "En el proceso de cálculo de subredes, ¿cuál es la fórmula utilizada para determinar el número mínimo de bits necesarios para crear 'N' subredes?", 
-                        options: ["2ⁿ ≥ N", "2ⁿ = N + 1", "2ⁿ ≤ N", "2ⁿ ≥ N + 2"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En el Ejemplo 2 se desea dividir la red 172.48.15.0/16 en 120 subredes. ¿Cuántos bits se deben tomar prestados para alcanzar este número de subredes?", 
-                        options: ["6 bits", "7 bits", "8 bits", "9 bits"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Para la red del Ejemplo 2, tras tomar 7 bits para subredes, ¿cuál es la nueva máscara resultante?", 
-                        options: ["/22", "/23", "/24", "/25"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Si en una subred se utiliza una máscara /23, ¿cuál es el número total de direcciones disponibles y cuántas son asignables a hosts?", 
-                        options: ["512 totales, 510 asignables", "510 totales, 508 asignables", "256 totales, 254 asignables", "1024 totales, 1022 asignables"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En el Ejemplo 2, además de calcular direcciones de red, broadcast y rango de IP's, se menciona el cálculo de direcciones desperdiciadas. ¿Cuál es la razón principal de estas 'direcciones desperdiciadas'?", 
-                        options: ["La diferencia entre el número máximo de subredes posibles y el número de subredes requeridas", "La conversión de la máscara a formato binario", "La duplicación de direcciones en el proceso de enrutamiento", "El uso de direcciones reservadas para el enrutamiento inter-VLAN"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En el proceso de subnetting, ¿qué implica 'corroborar que, en base a los cálculos, se pueden crear las subredes necesarias'?", 
-                        options: ["Verificar que la suma de bits de subred y host sea igual a 32 y que el número resultante de hosts por subred sea mayor que cero", "Confirmar que se está usando la versión correcta de IPv6", "Comprobar que la dirección de loopback está incluida en cada subred", "Verificar que no se hayan tomado prestados bits de la parte de red"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En un escenario de router-on-a-stick, ¿cuál es la importancia de la encapsulación dot1Q en las subinterfaces del router?", 
-                        options: ["Permite asignar direcciones IP de forma dinámica", "Identifica y etiqueta el tráfico de cada VLAN para que el router pueda distinguirlo", "Aumenta la velocidad de la red al reducir el tamaño de las tramas", "Convierte el tráfico multicast en unicast"], 
-                        correct: 1
-                    },
-                    { 
-                        text: "Comparando enrutamiento tradicional e inter-VLAN mediante router-on-a-stick, ¿cuál es una de las principales desventajas del método tradicional?", 
-                        options: ["Requiere múltiples interfaces físicas en el router, lo que incrementa el costo y la complejidad", "No permite la segmentación de la red", "Utiliza encapsulación dot1Q de forma ineficiente", "Solo es aplicable a redes pequeñas"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En la configuración de enrutamiento inter-VLAN, ¿por qué es imprescindible habilitar la interfaz física del router con el comando 'no shutdown'?", 
-                        options: ["Porque las subinterfaces heredan el estado de la interfaz física y si está deshabilitada, no se transmite tráfico", "Para evitar conflictos en la tabla ARP", "Para activar la encriptación en las subinterfaces", "Porque el comando 'no shutdown' configura automáticamente las direcciones IP"], 
-                        correct: 0
-                    }
-                ]
-            },
-            // Exámenes SI (Sistemas Informáticos)
-            SIBasico: {
-                description: "Examen básico de comandos de Linux.",
-                questions: [
-                    { 
-                        text: "¿Cuál es el comando para listar archivos y directorios en Linux?", 
-                        options: ["ls", "cd", "mkdir", "pwd"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para cambiar de directorio?", 
-                        options: ["mv", "cp", "cd", "rm"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Cuál es el comando para crear un nuevo directorio?", 
-                        options: ["mkdir", "touch", "rmdir", "nano"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para ver el contenido de un archivo de texto?", 
-                        options: ["cat", "cp", "mv", "rm"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando permite copiar archivos o directorios?", 
-                        options: ["cp", "mv", "rm", "ls"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para mover o renombrar archivos?", 
-                        options: ["mv", "cp", "rm", "find"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para eliminar archivos?", 
-                        options: ["rm", "cp", "mv", "ls"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Cuál es el comando para cambiar los permisos de un archivo?", 
-                        options: ["chmod", "chown", "chgrp", "passwd"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando muestra los permisos y propiedades de un archivo?", 
-                        options: ["ls -l", "ls -a", "cat", "file"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando muestra el directorio actual?", 
-                        options: ["pwd", "cd", "ls", "dir"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para ver el manual de un comando?", 
-                        options: ["man", "help", "info", "whatis"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se usa para buscar archivos en el sistema?", 
-                        options: ["find", "locate", "grep", "search"], 
-                        correct: 0
-                    }
-                ]
-            },
-            SIGestionUsuarios: {
-                description: "Examen de gestión de usuarios y permisos en Linux.",
-                questions: [
-                    { 
-                        text: "¿Qué comando se utiliza para ver los usuarios conectados al sistema?", 
-                        options: ["who", "where", "whoami", "users"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Cuál comando muestra el usuario actual?", 
-                        options: ["whoami", "who", "id", "users"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando muestra la información del usuario y grupo actual?", 
-                        options: ["id", "ls", "pwd", "chown"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué archivo almacena las contraseñas cifradas en Linux?", 
-                        options: ["/etc/shadow", "/etc/passwd", "/etc/group", "/etc/sudoers"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para agregar un nuevo usuario?", 
-                        options: ["useradd", "adduser", "Tanto A como B (según la distribución)", "newuser"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Qué comando permite cambiar la contraseña del usuario?", 
-                        options: ["passwd", "chpass", "setpass", "modpass"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se usa para cambiar el propietario de un archivo?", 
-                        options: ["chown", "chmod", "chgrp", "ls"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para cambiar el grupo asociado a un archivo?", 
-                        options: ["chgrp", "chown", "chmod", "groups"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando permite modificar los permisos de acceso de un archivo?", 
-                        options: ["chmod", "chown", "chgrp", "usermod"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Cuál de los siguientes permisos NO es válido en Linux?", 
-                        options: ["r (read)", "w (write)", "x (execute)", "v (verify)"], 
+                        text: "¿Cómo listar todos los grupos de los que forma parte un usuario?", 
+                        options: ["groups usuario", "id usuario", "listgroups usuario", "both A y B"], 
                         correct: 3
                     },
                     { 
-                        text: "¿Qué comando permite listar todos los grupos del sistema?", 
-                        options: ["cat /etc/group", "groups", "id", "listgroups"], 
+                        text: "Un proceso demonio suele:", 
+                        options: ["No estar ligado a terminal", "Iniciarse en modo gráfico", "Tener UID 0", "Ejecutarse como root siempre"], 
                         correct: 0
                     },
                     { 
-                        text: "Para modificar el archivo de sudoers de forma segura se utiliza:", 
-                        options: ["visudo", "sudoedit", "nano", "vi"], 
-                        correct: 0
-                    }
-                ]
-            },
-            SIComandosAvanzados: {
-                description: "Examen de comandos avanzados y manejo de procesos en Linux.",
-                questions: [
-                    { 
-                        text: "¿Qué comando se usa para crear un archivo vacío?", 
-                        options: ["touch", "mkdir", "cat", "nano"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Cómo se muestran los archivos ocultos en un directorio?", 
-                        options: ["ls -a", "ls -l", "ls -h", "ls --hidden"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando permite mostrar el contenido de un archivo paginando su salida?", 
-                        options: ["less", "more", "cat", "tail"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "Para copiar directorios de forma recursiva se utiliza:", 
-                        options: ["cp -r", "cp -a", "mv -r", "cp -f"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando se utiliza para buscar dentro de archivos por una cadena de texto?", 
-                        options: ["grep", "find", "search", "locate"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Cuál comando muestra la estructura de directorios en forma de árbol?", 
-                        options: ["tree", "ls", "find", "graph"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "¿Qué comando permite comparar el contenido de dos archivos?", 
-                        options: ["diff", "cmp", "Ambas A y B son correctas", "comm"], 
+                        text: "usermod -L bloquea la cuenta; ¿qué comando la desbloquea?", 
+                        options: ["usermod -U usuario", "passwd -u usuario", "both A y B", "unlockuser usuario"], 
                         correct: 2
                     },
                     { 
-                        text: "¿Qué comando se utiliza para ver el uso del disco?", 
-                        options: ["df", "du", "disk", "free"], 
+                        text: "¿Cuál es el valor octal de permisos rw-rw----?", 
+                        options: ["660", "664", "600", "770"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando permite ver procesos en ejecución?", 
-                        options: ["ps", "top", "htop", "Todos son válidos"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Qué comando muestra las últimas líneas de un archivo?", 
-                        options: ["tail", "head", "less", "more"], 
+                        text: "¿Qué efecto tiene un umask 077?", 
+                        options: ["Archivos 600, directorios 700", "Archivos 755, directorios 755", "Archivos 644, directorios 755", "Archivos 666, directorios 777"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué comando permite ver las primeras líneas de un archivo?", 
-                        options: ["head", "tail", "less", "more"], 
-                        correct: 0
-                    },
-                    { 
-                        text: "Para finalizar un proceso se usa el comando:", 
-                        options: ["kill", "stop", "end", "exit"], 
+                        text: "Para ejecutar un comando en segundo plano y desacoplarlo del terminal:", 
+                        options: ["nohup comando &", "bg comando", "fg comando", "comando &!"], 
                         correct: 0
                     }
                 ]
             },
-            // Exámenes IPEI
+            SOM5C: {
+                description: "Unidad 5: Linux. Gestión de usuarios, grupos, permisos y procesos - Examen 5C (Nivel Difícil)",
+                questions: [
+                    { 
+                        text: "¿Qué archivo define los permisos especiales SUID y SGID por defecto en arranque?", 
+                        options: ["/etc/login.defs", "/etc/fstab", "/proc/sys/fs/suid", "/etc/security/limits.conf"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El comando setfacl permite:", 
+                        options: ["Gestionar listas de control de acceso (ACL)", "Definir permisos básicos sólo", "Cambiar propietario en ACL", "Sincronizar ficheros"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cómo conseguir recursivamente que todos los ficheros en un directorio hereden el grupo?", 
+                        options: ["chmod g+s -R directorio", "chgrp -R grupo directorio", "setgid -R directorio", "chown :grupo -R directorio"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para ver las ACL actuales de un archivo:", 
+                        options: ["getfacl archivo", "lsattr archivo", "getacl archivo", "ls -l"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué opción de ps muestra la línea de comando completa?", 
+                        options: ["-f", "-l", "-o args", "both A y C"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Cómo se elimina el sticky bit de un directorio?", 
+                        options: ["chmod -t directorio", "chmod t= directorio", "chmod 1777 directorio", "chmod -s directorio"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Un proceso huérfano (orphan) es aquel cuyo padre:", 
+                        options: ["Ha terminado antes que él", "Está en sleep", "Tiene menos privilegios", "Es el sistema de arranque"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "renice -n -5 -p PID hace que:", 
+                        options: ["Aumente la prioridad (menor nice)", "Disminuya la prioridad", "Ponga nice a 5", "Reinicie el proceso 5 veces"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cómo se desactiva un demonio gestionado por systemd?", 
+                        options: ["systemctl disable servicio", "service servicio stop", "chkconfig servicio off", "initctl stop servicio"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para monitorear desempeño I/O de procesos se usa:", 
+                        options: ["iotop", "top -i", "vmstat", "dstat"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué señal envía kill -15?", 
+                        options: ["SIGTERM", "SIGKILL", "SIGHUP", "SIGSTOP"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál es la diferencia entre SIGHUP y SIGTERM?", 
+                        options: ["SIGHUP recarga la configuración; SIGTERM solicita terminación", "SIGHUP mata inmediatamente; SIGTERM ignora permisos", "SIGHUP pausa; SIGTERM continúa", "No hay diferencia"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En un sistema con PAM, ¿para qué sirve /etc/pam.d/?", 
+                        options: ["Configurar módulos de autenticación", "Definir servicios de red", "Almacenar claves SSH", "Gestionar usuarios LDAP"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El directorio /sys es:", 
+                        options: ["Interfaz del kernel sysfs", "Logs del sistema", "Scripts de inicio", "Binarios del sistema"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué comando crea un usuario sin directorio home?", 
+                        options: ["useradd -M usuario", "adduser --no-home usuario", "userdel -r usuario", "mkuser -H usuario"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cómo asignar un perfil de usuario por defecto a nuevos usuarios?", 
+                        options: ["Editar /etc/skel", "Configurar /etc/default/useradd", "both A y B", "Modificar /home/template"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Para qué sirve ulimit -u?", 
+                        options: ["Límite de procesos por usuario", "Tamaño máximo de archivos", "Uso máximo de CPU", "Límite de usuarios simultáneos"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "La opción -e de ps:", 
+                        options: ["Muestra entorno del proceso", "Especifica usuario efectivo", "Excluye fallos de memoria", "Ordena por estado de ejecución"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué parámetro de chmod permite usar números simbólicos?", 
+                        options: ["--reference", "--numeric", "No aplica: siempre octal o simbólico", "--mode"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Al detener un proceso con kill -STOP PID, ¿qué ocurre?", 
+                        options: ["Se pausa y puede reanudarse con SIGCONT", "Se termina inmediatamente", "Borrar el proceso de la tabla", "Reinicia el proceso"], 
+                        correct: 0
+                    }
+                ]
+            },
+            // Examen 6A (Nivel Fácil)
+            SOM6A: {
+                description: "Unidad 6: Administración y configuración avanzada - Examen 6A (Nivel Fácil)",
+                questions: [
+                    { 
+                        text: "¿Qué script pide un nombre de fichero y muestra su contenido si tiene permiso de lectura?", 
+                        options: ["ver", "renombrar", "infousuario", "creadir"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El script renombrar comprueba primero si:", 
+                        options: ["El fichero existe", "El usuario existe", "El destino es un directorio", "Hay espacio en disco"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué script muestra variables del sistema de forma paginada?", 
+                        options: ["variables", "servicio", "infousuario", "renombrar"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El script infousuario muestra:", 
+                        options: ["uid y grupos de un usuario", "procesos activos", "ficheros en home", "servicios habilitados"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "creadir recibe parámetros para:", 
+                        options: ["Crear varios directorios", "Crear ficheros", "Borrar directorios", "Listar directorios"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "En creadir, si el directorio ya existe, el script:", 
+                        options: ["Muestra mensaje de error", "Lo sobrescribe", "Lo omite sin mensaje", "Aborta el sistema"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El script servicio pregunta nombre y muestra:", 
+                        options: ["Estado del servicio", "Logs del servicio", "Permisos del servicio", "Usuarios del servicio"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para parar un servicio con systemd se usa:", 
+                        options: ["systemctl stop nombre", "service nombre halt", "initctl stop nombre", "systemd stop nombre"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué script repite la creación de directorios hasta responder 'n'?", 
+                        options: ["creadir2", "creadir", "ver", "variables"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El script variables extrae:", 
+                        options: ["Nombre de shell y directorio personal", "UID de root", "Lista de servicios", "Usuarios con UID > 1000"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El script ver despliega el contenido usando:", 
+                        options: ["less", "cat", "more", "tail"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Para comprobar existencia de fichero en bash se usa:", 
+                        options: ["[ -e fichero ]", "test -f fichero", "both A y B", "exists fichero"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "El comando read en bash sirve para:", 
+                        options: ["Leer entrada de usuario", "Leer ficheros", "Mostrar variables", "Listar procesos"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Para paginar salida en bash se emplea:", 
+                        options: ["| more", "| grep", "| wc", "| sort"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué sentencia finaliza un script?", 
+                        options: ["exit", "quit", "end", "stop"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El prompt en bash se almacena en la variable:", 
+                        options: ["PS1", "PROMPT", "BASHRC", "ENV"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "El fichero donde se definen variables globales al inicio es:", 
+                        options: ["/etc/profile", "~/.bashrc", "/etc/bash.bashrc", "/etc/environment"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Para mostrar la shell actual se usa:", 
+                        options: ["echo $SHELL", "shell --current", "print shell", "which shell"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "La instrucción if en bash requiere:", 
+                        options: ["fi para finalizar", "endif", "done", "end if"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Un servicio no existente provoca en servicio:", 
+                        options: ["Mensaje de error", "Se inicia uno nuevo", "El script se detiene sin mensaje", "Reinicio del sistema"], 
+                        correct: 0
+                    }
+                ]
+            },
+            // Exámenes Python
+            SIPythonA: {
+                description: "Python - Nivel Fácil",
+                questions: [
+                    { 
+                        text: "¿Cuál es la forma correcta de crear una variable con valor numérico?", 
+                        options: ["int x = 5", "x = 5", "x == 5", "declare x = 5"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cómo se indica un texto en Python?", 
+                        options: ["Entre paréntesis", "Entre comillas", "Entre llaves", "Entre corchetes"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el tipo de dato de la variable precio = 10.99?", 
+                        options: ["int", "float", "str", "bool"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué valor tiene True and False?", 
+                        options: ["True", "False", "Error", "Ninguno"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál de estos es un comentario en Python?", 
+                        options: ["// Esto es un comentario", "/* Esto es un comentario */", "# Esto es un comentario", "-- Esto es un comentario"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué imprime este código? print(\"Hola\")", 
+                        options: ["Hola", "\"Hola\"", "print(\"Hola\")", "Error"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál es la salida de print(3 + 4)?", 
+                        options: ["34", "7", "3 + 4", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué operador se usa para comparar si dos valores son iguales?", 
+                        options: ["=", "==", "!=", "equals"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué tipo de dato es True?", 
+                        options: ["str", "int", "bool", "float"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cómo se define una lista?", 
+                        options: ["lista = {1, 2, 3}", "lista = (1, 2, 3)", "lista = [1, 2, 3]", "lista = <1, 2, 3>"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué función muestra algo por pantalla?", 
+                        options: ["echo", "write", "display", "print"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué estructura sirve para repetir acciones?", 
+                        options: ["if", "def", "for", "class"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué palabra clave se usa para crear una función?", 
+                        options: ["define", "def", "fun", "function"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el resultado de 4 > 2?", 
+                        options: ["True", "False", "Error", "2"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué hace el siguiente código? for i in range(3): print(i)", 
+                        options: ["Imprime 1, 2, 3", "Imprime 0, 1, 2", "Imprime 3 veces \"i\"", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se necesita para ejecutar código solo si una condición no se cumple?", 
+                        options: ["if", "else", "elif", "for"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el índice del primer elemento en una lista?", 
+                        options: ["0", "1", "-1", "Ninguno"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué se obtiene con len([1,2,3,4])?", 
+                        options: ["3", "4", "5", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cómo se accede al valor \"Ana\" en persona = {\"nombre\": \"Ana\"}?", 
+                        options: ["persona[0]", "persona.nombre", "persona[\"nombre\"]", "persona[nombre]"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué imprime este código? print(\"Hola\" == \"hola\")", 
+                        options: ["True", "False", "Error", "hola"], 
+                        correct: 1
+                    }
+                ]
+            },
+            SIPythonB: {
+                description: "Python - Nivel Intermedio",
+                questions: [
+                    { 
+                        text: "¿Qué tipo de dato devuelve la expresión 10 > 5?", 
+                        options: ["str", "int", "bool", "float"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué función devuelve el tipo de una variable?", 
+                        options: ["typeof()", "type()", "kindof()", "datatype()"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el valor de len(\"Hola\")?", 
+                        options: ["3", "4", "5", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué hace el operador !=?", 
+                        options: ["Compara si son iguales", "Compara si son distintos", "Asigna valor", "Concatena"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se imprime con este código? x = [1, 2, 3]; print(x[1])", 
+                        options: ["1", "2", "3", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cómo se llama correctamente a una función saludar()?", 
+                        options: ["saludar", "call saludar()", "saludar()", "saludar[]"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué tipo de estructura es {\"nombre\": \"Ana\"}?", 
+                        options: ["Lista", "Tupla", "Diccionario", "Conjunto"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál es el resultado de True or False?", 
+                        options: ["True", "False", "0", "Error"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué hace este código? for letra in \"hi\": print(letra)", 
+                        options: ["Muestra \"hi\"", "Muestra letra 2 veces", "Imprime h y luego i", "Da error"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué significa elif?", 
+                        options: ["Si no", "Otro caso", "Si no, si otra condición", "Nada"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué imprime este código? def doble(x): return x * 2; print(doble(3))", 
+                        options: ["6", "33", "doble(3)", "Error"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué hace el operador // en Python?", 
+                        options: ["División flotante", "Comentario", "División entera", "Potencia"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué estructura de control permite repetir hasta que se cumpla una condición?", 
+                        options: ["for", "while", "if", "return"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué hace print(\"Hola\" + \" Mundo\")?", 
+                        options: ["Error", "Hola Mundo", "HolaMundo", "Hola + Mundo"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cómo se comenta varias líneas en Python?", 
+                        options: ["Con /* */", "Con triple comilla \"\"\"", "Con # varias veces", "B y C son válidas"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué función convierte texto a número?", 
+                        options: ["float()", "int()", "str()", "A y B son correctas"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué imprime este código? x = 5; if x > 10: print(\"Mayor\"); else: print(\"Menor o igual\")", 
+                        options: ["Mayor", "Menor o igual", "Error", "Nada"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el índice del último elemento en la lista x = [4,5,6]?", 
+                        options: ["3", "2", "-1", "1"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se obtiene con type([1,2,3])?", 
+                        options: ["list", "int", "tuple", "str"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué hace range(1,4)?", 
+                        options: ["[1, 2, 3]", "[1, 2, 3, 4]", "[1, 4]", "[1, 3]"], 
+                        correct: 0
+                    }
+                ]
+            },
+            SIPythonC: {
+                description: "Python - Nivel Difícil",
+                questions: [
+                    { 
+                        text: "¿Qué valor booleano devuelve bool([])?", 
+                        options: ["True", "False", "None", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué imprime print(\"5\" * 2)?", 
+                        options: ["10", "55", "\"55\"", "\"5 5\""], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué hace este código? x = 0; while x < 3: print(x); x += 1", 
+                        options: ["Imprime 1, 2, 3", "Imprime 0, 1, 2", "Imprime 0, 1, 2, 3", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se imprime con print(10 // 3)?", 
+                        options: ["3.3", "3", "3.0", "4"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué hace el código if not False:", 
+                        options: ["No hace nada", "Ejecuta el bloque", "Error", "Se detiene el programa"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es el resultado de 5 > 3 and 2 < 1?", 
+                        options: ["True", "False", "None", "Error"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué imprime este código? def f(a=1): return a * 2; print(f())", 
+                        options: ["2", "1", "0", "Error"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cómo se accede al segundo elemento de la lista x = [10, 20, 30]?", 
+                        options: ["x[2]", "x[1]", "x(1)", "x.1"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál de estos operadores devuelve False si ambos operandos son True y False?", 
+                        options: ["and", "or", "not", "xor"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué hace print(\"A\" in \"Casa\")?", 
+                        options: ["True", "False", "Error", "None"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué significa pass en Python?", 
+                        options: ["Saltar una línea", "No hacer nada", "Terminar ejecución", "Saltar al final"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué valor imprime esto? x = [1,2,3]; print(len(x) == 3)", 
+                        options: ["True", "False", "Error", "None"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cómo se llama una función que no devuelve nada?", 
+                        options: ["void", "null", "None", "función sin return"], 
+                        correct: 3
+                    },
+                    { 
+                        text: "¿Qué hace str(10.5)?", 
+                        options: ["Convierte a string", "Redondea", "Devuelve 10", "Error"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Cuál es el valor de \"Hola\"[1]?", 
+                        options: ["H", "o", "l", "a"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se imprime? for i in range(0,6,2): print(i)", 
+                        options: ["0 1 2 3 4 5", "0 2 4", "2 4 6", "0 2 4 6"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué función sirve para detener un bucle antes de que termine?", 
+                        options: ["exit", "return", "break", "stop"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué función sirve para continuar con la siguiente iteración de un bucle?", 
+                        options: ["pass", "continue", "next", "skip"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué tipo es type({\"x\":1})?", 
+                        options: ["dict", "set", "list", "tuple"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué hace print(\"hola\".upper())?", 
+                        options: ["HOLA", "hola", "error", "Hola"], 
+                        correct: 0
+                    }
+                ]
+            },
+            // Examen de inglés (Past Continuous)
+            IPPastContinuous: {
+                description: "Past Continuous - Intermediate Test",
+                questions: [
+                    { 
+                        text: "Which sentence is correct in past continuous?", 
+                        options: ["She reading a book.", "She was read a book.", "She was reading a book.", "She read a book."], 
+                        correct: 2
+                    },
+                    { 
+                        text: "What's the negative form of 'They were playing'?", 
+                        options: ["They wasn't playing.", "They didn't playing.", "They weren't playing.", "They not playing."], 
+                        correct: 2
+                    },
+                    { 
+                        text: "What is the past continuous form of the verb 'run'?", 
+                        options: ["runing", "running", "ran", "runned"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Choose the correct sentence:", 
+                        options: ["I was cook when the phone was ringing.", "I cooked when the phone rang.", "I was cooking when the phone rang.", "I was cooking when rang the phone."], 
+                        correct: 2
+                    },
+                    { 
+                        text: "What does 'while' often indicate in past continuous?", 
+                        options: ["Future action", "A short action", "An ongoing action", "A repeated action"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Which sentence has two simultaneous actions?", 
+                        options: ["I was eating when the bell rang.", "While I was studying, she was watching TV.", "I cooked dinner and then ate.", "He reads and writes daily."], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Identify the error: 'They was playing football.'", 
+                        options: ["'was' should be 'were'", "'playing' should be 'played'", "'football' is incorrect", "No error"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "What's the -ing form of 'lie' (mentir)?", 
+                        options: ["lieing", "lying", "lyeing", "lie"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Complete: 'He ___ (watch) TV while I ___ (do) homework.'", 
+                        options: ["was watching / was doing", "watched / did", "is watching / was doing", "was watching / doing"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Which question is correct?", 
+                        options: ["Were you watching TV?", "Was you watching TV?", "You were watching TV?", "Do you were watching TV?"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Choose the time expression often used with past continuous:", 
+                        options: ["usually", "every day", "right now", "at 7 p.m."], 
+                        correct: 3
+                    },
+                    { 
+                        text: "What's the correct use of spelling rule: 'make' → ?", 
+                        options: ["makeing", "making", "makking", "maked"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Which sentence shows an interrupted action?", 
+                        options: ["I was writing when my pen broke.", "I write when my pen breaks.", "I had written when the pen broke.", "I was writing and wrote the pen."], 
+                        correct: 0
+                    },
+                    { 
+                        text: "Find the mistake: 'Was he went home?'", 
+                        options: ["'was' should be 'did'", "'went' should be 'going'", "'he' should be 'they'", "No mistake"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Correct the sentence: 'We was studying all day.'", 
+                        options: ["We are studying all day.", "We were studying all day.", "We studied all day.", "We was study all day."], 
+                        correct: 1
+                    },
+                    { 
+                        text: "How do you say this correctly? 'She dance when I arrived.'", 
+                        options: ["She danced when I arrived.", "She dances when I arrived.", "She was dancing when I arrived.", "She was danced when I arrived."], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Choose the sentence with incorrect spelling:", 
+                        options: ["He was writing a poem.", "We were tying the ropes.", "I was runing to the bus.", "She was studying French."], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Complete the question: '___ he sleeping when you called?'", 
+                        options: ["Did", "Was", "Is", "Were"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "Which action is NOT in progress?", 
+                        options: ["They were laughing.", "I was talking on the phone.", "She played piano.", "We were walking to school."], 
+                        correct: 2
+                    },
+                    { 
+                        text: "Why do we use past continuous?", 
+                        options: ["To talk about the future.", "To talk about repeated actions.", "To describe actions in progress in the past.", "To describe habits."], 
+                        correct: 2
+                    }
+                ]
+            },
+            // Exámenes IPE
             IPEIFacil: {
-                description: "Examen fácil de IPEI (Salario y Seguridad Social).",
+                description: "Examen IPE A - Nivel Fácil",
                 questions: [
                     { 
-                        text: "¿Qué es el salario?", 
-                        options: [
-                            "Es el dinero que el trabajador paga a la empresa.",
-                            "Es un incentivo ocasional.",
-                            "Es un subsidio estatal.",
-                            "Es la remuneración que recibe el trabajador por su labor."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "La Seguridad Social se define como:", 
-                        options: [
-                            "Una bonificación por desempeño.",
-                            "Una modalidad de ahorro obligatorio.",
-                            "Un sistema de protección social que cubre contingencias.",
-                            "Un impuesto único que se paga una sola vez."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Cuál de los siguientes elementos se considera parte del salario?", 
-                        options: [
-                            "La remuneración en dinero y en especie.",
-                            "El incentivo social familiar.",
-                            "La jornada de trabajo.",
-                            "La antigüedad en la empresa."
-                        ], 
-                        correct: 0
-                    },
-                    { 
-                        text: "El salario base se refiere a:", 
-                        options: [
-                            "La suma total de bonificaciones e incentivos.",
-                            "Las horas extras pagadas.",
-                            "La remuneración fija pactada en el contrato.",
-                            "Los descuentos por absentismo."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "La cotización a la Seguridad Social se destina a:", 
-                        options: [
-                            "Incrementar el salario neto mensual.",
-                            "Realizar inversiones empresariales.",
-                            "Pagar multas laborales.",
-                            "Financiar la protección social de los trabajadores."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál de las siguientes opciones describe mejor el salario neto?", 
-                        options: [
-                            "El salario que recibe el trabajador después de deducciones.",
-                            "El salario antes de descuentos.",
-                            "La suma de todas las bonificaciones.",
-                            "El salario bruto aumentado por incentivos."
-                        ], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En el contexto laboral, 'prestaciones' se refiere a:", 
-                        options: [
-                            "Los servicios prestados por el trabajador a la empresa.",
-                            "El salario base únicamente.",
-                            "Los impuestos que se deducen del salario.",
-                            "Los beneficios y derechos que el trabajador recibe (como vacaciones, prestaciones sociales, etc.)."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Qué organismo gestiona la Seguridad Social en muchos países?", 
-                        options: [
-                            "La empresa privada.",
-                            "Una entidad pública o autónoma.",
-                            "El Ministerio de Hacienda.",
-                            "Las cámaras de comercio."
-                        ], 
+                        text: "¿Qué es una modificación sustancial del contrato?", 
+                        options: ["Cambio de oficina", "Cambio de jornada, salario o funciones", "Un ascenso", "Un cambio de jefe"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Cuál es el objetivo principal de la Seguridad Social?", 
-                        options: [
-                            "Incrementar las ganancias empresariales.",
-                            "Reducir los impuestos estatales.",
-                            "Proteger al trabajador frente a contingencias sociales.",
-                            "Establecer las condiciones de un contrato laboral."
-                        ], 
+                        text: "¿Qué causas permiten una modificación sustancial?", 
+                        options: ["Personales del trabajador", "Sociales", "Económicas, técnicas, organizativas o de producción", "Políticas"], 
                         correct: 2
                     },
                     { 
-                        text: "El salario se puede abonar en dinero o en especie. Esto último significa que:", 
-                        options: [
-                            "Se recibe parte del pago en forma de bienes o servicios.",
-                            "Se paga únicamente con bienes de consumo.",
-                            "No se paga en efectivo.",
-                            "Es un complemento variable del salario base."
-                        ], 
+                        text: "¿Qué implica la movilidad funcional?", 
+                        options: ["Trabajar en otra empresa", "Realizar tareas muy distintas y degradantes", "Realizar otras tareas dentro del mismo grupo profesional", "Trabajar en vacaciones"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué debe respetar la movilidad funcional?", 
+                        options: ["El salario", "El horario fijo", "La dignidad del trabajador", "La opinión del empleador"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué es la movilidad geográfica?", 
+                        options: ["Cambiar de grupo profesional", "Traslado a otro país por vacaciones", "Cambiar el lugar de trabajo", "Hacer teletrabajo"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué se requiere para aplicar una movilidad geográfica?", 
+                        options: ["Que el trabajador esté de acuerdo", "Justificación legal y posible compensación", "Aprobación sindical", "Solicitud escrita del trabajador"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué ocurre durante la suspensión del contrato?", 
+                        options: ["El trabajador cobra doble", "Se termina el contrato", "Se interrumpe trabajar y cobrar, pero el contrato sigue", "Se hace fijo"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué es una causa común de suspensión?", 
+                        options: ["Despido", "Enfermedad temporal", "Cambio de jefe", "Mejora de salario"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué pasa al terminar una suspensión?", 
+                        options: ["Se firma un nuevo contrato", "Se despide al trabajador", "El trabajador se reincorpora", "Se sube el sueldo"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál es una causa de extinción por parte del trabajador?", 
+                        options: ["Renuncia", "Promoción", "Baja por maternidad", "Multa"], 
                         correct: 0
                     },
                     { 
-                        text: "¿Qué son las 'cotizaciones' en el ámbito de la Seguridad Social?", 
-                        options: [
-                            "Bonificaciones por productividad.",
-                            "Descuentos por absentismo.",
-                            "Incentivos fiscales.",
-                            "Aportes obligatorios que realizan trabajadores y empleadores."
-                        ], 
-                        correct: 3
+                        text: "¿Qué debe respetar el empleador al extinguir un contrato?", 
+                        options: ["Silencio administrativo", "Requisitos legales", "Opinión del cliente", "Informe médico"], 
+                        correct: 1
                     },
                     { 
-                        text: "La base de cotización es:", 
-                        options: [
-                            "El salario neto del trabajador.",
-                            "La suma de todos los descuentos.",
-                            "La cantidad sobre la que se calculan las aportaciones a la Seguridad Social.",
-                            "Un concepto independiente del salario."
-                        ], 
+                        text: "¿Cuál es una causa de extinción por parte del empleador?", 
+                        options: ["Cambio de vacaciones", "Incumplimiento del convenio", "Causa disciplinaria", "Promoción"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué es una causa natural de extinción?", 
+                        options: ["Huelga", "Jubilación o fallecimiento", "Cambio de jornada", "Ampliación de contrato"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué ocurre si un contrato se extingue por mutuo acuerdo?", 
+                        options: ["Solo el empleador lo decide", "El trabajador no cobra nada", "Ambas partes lo aceptan", "Siempre es ilegal"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál de estos casos suspende un contrato?", 
+                        options: ["Cambio de grupo", "Huelga legal", "Subida de sueldo", "Cambio de jornada"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué sucede con el salario durante una suspensión?", 
+                        options: ["Se duplica", "No se paga", "Se paga en parte", "Se reduce a la mitad"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿La suspensión del contrato termina la relación laboral?", 
+                        options: ["Sí", "No", "Depende del jefe", "Solo si hay vacaciones"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué tipo de movilidad puede implicar compensación económica?", 
+                        options: ["Funcional", "Vertical", "Geográfica", "Horizontal"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué acción corresponde a voluntad del trabajador?", 
+                        options: ["Traslado", "Baja voluntaria", "Despido disciplinario", "Expediente de regulación"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué debe hacer el trabajador después de una suspensión?", 
+                        options: ["Renunciar", "Reclamar un aumento", "Reincorporarse", "Pedir traslado"], 
                         correct: 2
                     }
                 ]
             },
             IPEIIntermedio: {
-                description: "Examen intermedio de IPEI (Salario y Seguridad Social).",
+                description: "Examen IPE B - Nivel Intermedio",
                 questions: [
                     { 
-                        text: "La estructura del salario puede incluir complementos salariales. ¿Cuál de los siguientes es un ejemplo de complemento?", 
-                        options: [
-                            "El salario base.",
-                            "La cotización obrera.",
-                            "La deducción por absentismo.",
-                            "El plus de transporte."
-                        ], 
-                        correct: 3
+                        text: "¿Qué condición debe cumplirse para una modificación sustancial?", 
+                        options: ["Debe comunicarse con 5 días de antelación", "Debe ser por razones justificadas", "Debe tener apoyo sindical", "No requiere justificación"], 
+                        correct: 1
                     },
                     { 
-                        text: "Dentro del salario, ¿qué función cumple el complemento de antigüedad?", 
-                        options: [
-                            "Reconocer los años de servicio en la empresa.",
-                            "Reconocer la formación académica del trabajador.",
-                            "Incentivar la productividad en el corto plazo.",
-                            "Compensar el exceso de horas extras."
-                        ], 
+                        text: "¿En qué casos puede el empleador cambiar funciones al trabajador?", 
+                        options: ["Si lo desea", "Si lo aprueba un juez", "Si respeta el grupo profesional y la dignidad", "Solo si hay ascenso"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál de estas NO es causa de suspensión del contrato?", 
+                        options: ["Incapacidad temporal", "Sanción disciplinaria", "Subida de salario", "Huelga legal"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué distingue la suspensión de la extinción del contrato?", 
+                        options: ["La duración", "Que en la suspensión el contrato sigue vigente", "Que en la extinción se cobra menos", "Que no hay indemnización"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuál es una causa objetiva de extinción?", 
+                        options: ["Error en nómina", "Baja voluntaria", "Cierre de empresa por motivos económicos", "Promoción de otro trabajador"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué plazo debe respetarse para comunicar una modificación sustancial individual?", 
+                        options: ["3 días", "15 días", "No se requiere aviso", "Inmediato"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué se requiere para un traslado individual por movilidad geográfica?", 
+                        options: ["Justificación y preaviso de 30 días", "Opinión del delegado de personal", "Carta del trabajador", "Silencio administrativo"], 
                         correct: 0
                     },
                     { 
-                        text: "El concepto de 'salario en especie' se utiliza cuando:", 
-                        options: [
-                            "Se abona exclusivamente en efectivo.",
-                            "Se perciben bonificaciones salariales.",
-                            "Parte de la remuneración se entrega en bienes o servicios.",
-                            "Se descuentan los impuestos laborales."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "La base reguladora en el ámbito de la Seguridad Social se utiliza para calcular:", 
-                        options: [
-                            "La bonificación por productividad.",
-                            "El salario base de nuevos empleados.",
-                            "El incentivo por puntualidad.",
-                            "La cuantía de las prestaciones (como jubilación o incapacidad)."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Qué elementos NO se integran en la base de cotización?", 
-                        options: [
-                            "El salario base.",
-                            "Las dietas no compensadas.",
-                            "Los complementos salariales de carácter fijo.",
-                            "Las retribuciones en especie, siempre que excedan ciertos límites."
-                        ], 
+                        text: "¿Qué puede hacer el trabajador si no acepta una modificación sustancial?", 
+                        options: ["Negarse sin consecuencias", "Pedir despido con indemnización", "Cambiar de empresa", "Solicitar reducción de jornada"], 
                         correct: 1
                     },
                     { 
-                        text: "La diferencia entre salario bruto y neto se debe principalmente a:", 
-                        options: [
-                            "Los incentivos por desempeño.",
-                            "La cantidad de horas trabajadas.",
-                            "Las deducciones de cotizaciones e impuestos.",
-                            "Los complementos salariales."
-                        ], 
+                        text: "¿Qué sucede con la antigüedad durante la suspensión?", 
+                        options: ["Se reinicia", "Se pierde", "Se mantiene", "Se duplica"], 
                         correct: 2
                     },
                     { 
-                        text: "¿Qué obligación tiene el empleador respecto a las cotizaciones a la Seguridad Social?", 
-                        options: [
-                            "Está obligado a retener e ingresar las cotizaciones de sus empleados.",
-                            "Solo debe abonarlas si el trabajador lo solicita.",
-                            "Puede decidir no cotizar si se llega a un acuerdo con el trabajador.",
-                            "Solo cotiza sobre las horas extras."
-                        ], 
-                        correct: 0
-                    },
-                    { 
-                        text: "La 'retribución variable' se relaciona con:", 
-                        options: [
-                            "Un complemento fijo en el contrato.",
-                            "La base de cotización mínima.",
-                            "Las deducciones obligatorias.",
-                            "Pagos que pueden fluctuar según el rendimiento o resultados."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "El salario mínimo interprofesional se establece para:", 
-                        options: [
-                            "Incentivar la competitividad entre empresas.",
-                            "Garantizar una remuneración mínima a cualquier trabajador.",
-                            "Regular únicamente a los trabajadores del sector público.",
-                            "Excluir a trabajadores con experiencia."
-                        ], 
+                        text: "¿Qué opción es un ejemplo de movilidad funcional?", 
+                        options: ["Trasladar a otro país", "Cambiar funciones de camarero a cocinero", "Reducir jornada", "Dar vacaciones forzadas"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Qué se entiende por 'descuentos legales' en el salario?", 
-                        options: [
-                            "Descuentos por compras en la empresa.",
-                            "Reducciones voluntarias acordadas entre trabajador y empleador.",
-                            "Deducciones establecidas por la ley, como impuestos y cotizaciones.",
-                            "Descuentos por incentivos laborales."
-                        ], 
+                        text: "¿Qué ocurre si la movilidad funcional vulnera la dignidad del trabajador?", 
+                        options: ["No pasa nada", "Es legal", "Puede ser impugnada", "Se convierte en despido"], 
                         correct: 2
                     },
                     { 
-                        text: "En el cálculo del salario, las horas extraordinarias se compensan generalmente:", 
-                        options: [
-                            "Mediante descuentos en el salario neto.",
-                            "Con un pago superior al valor de la hora ordinaria.",
-                            "Con una reducción en la base de cotización.",
-                            "Únicamente con días libres."
-                        ], 
+                        text: "¿Qué ocurre si el contrato se extingue por fuerza mayor?", 
+                        options: ["El trabajador puede exigir su puesto", "Se requiere indemnización obligatoria", "Puede autorizarlo la autoridad laboral", "No se considera causa legal"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál de estas no es causa de extinción por voluntad del trabajador?", 
+                        options: ["Incumplimiento del empleador", "Mejor oportunidad laboral", "Cambio de centro de trabajo", "Baja voluntaria"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué tipo de contrato no se extingue automáticamente por maternidad?", 
+                        options: ["Temporal", "De formación", "Fijo", "Cualquiera"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué ocurre si la empresa no respeta el procedimiento de despido?", 
+                        options: ["El despido es válido", "El despido puede declararse improcedente", "El trabajador debe renunciar", "Se convierte en baja voluntaria"], 
                         correct: 1
                     },
                     { 
-                        text: "La periodicidad del pago del salario suele ser:", 
-                        options: [
-                            "Anual.",
-                            "Solo al finalizar el contrato.",
-                            "Variable, sin una norma definida.",
-                            "Semanal, quincenal o mensual, según lo establecido en el convenio."
-                        ], 
-                        correct: 3
+                        text: "¿Qué papel tiene la Inspección de Trabajo en algunas extinciones?", 
+                        options: ["No interviene nunca", "Puede exigir indemnización", "Puede autorizar despidos colectivos", "Aprueba todas las suspensiones"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué documento acredita una suspensión por incapacidad temporal?", 
+                        options: ["Informe de empresa", "Contrato", "Parte médico", "Nómina"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué acción permite el contrato seguir vivo, pero sin prestación?", 
+                        options: ["Extinción", "Jubilación", "Suspensión", "Renuncia"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué puede implicar el incumplimiento grave del empleador?", 
+                        options: ["Sanción económica", "Baja del trabajador con indemnización", "Reducción de jornada", "Revisión médica"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué debe incluirse en la carta de despido?", 
+                        options: ["Firma del trabajador", "Fecha de nacimiento", "Causas y fecha de efecto", "Título del contrato"], 
+                        correct: 2
                     }
                 ]
             },
             IPEIDificil: {
-                description: "Examen difícil de IPEI (Salario y Seguridad Social).",
+                description: "Examen IPE C - Nivel Difícil",
                 questions: [
                     { 
-                        text: "La composición del salario, según la normativa vigente, puede incluir varios conceptos. ¿Cuál de las siguientes afirmaciones es CORRECTA?", 
-                        options: [
-                            "Solo se consideran retribuciones en dinero.",
-                            "Los complementos salariales no influyen en la base de cotización.",
-                            "Las dietas siempre se integran en la base de cotización sin excepción.",
-                            "Se integran tanto retribuciones en dinero como en especie, respetando límites legales."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "En materia de cotización, ¿cómo se trata la retribución en especie?", 
-                        options: [
-                            "Siempre se integra íntegramente en la base de cotización.",
-                            "No se integra jamás en la base de cotización.",
-                            "Se integra solo cuando supera determinados límites fijados legalmente.",
-                            "Solo se integra si el trabajador lo solicita."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "La 'base de cotización' es fundamental para el cálculo de prestaciones. ¿Cuál es su importancia?", 
-                        options: [
-                            "Sirve de referencia para calcular las prestaciones contributivas de la Seguridad Social.",
-                            "Determina únicamente el salario neto del trabajador.",
-                            "Es un dato irrelevante para la jubilación.",
-                            "Se utiliza únicamente para calcular el salario bruto."
-                        ], 
-                        correct: 0
-                    },
-                    { 
-                        text: "Una situación de incumplimiento en el ingreso de cotizaciones por parte del empleador puede generar:", 
-                        options: [
-                            "Solo sanciones administrativas sin efectos sobre el trabajador.",
-                            "Un aumento automático del salario base.",
-                            "La pérdida de derechos a determinadas prestaciones por parte del trabajador.",
-                            "Beneficios fiscales para la empresa."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "Respecto a la retribución variable, ¿qué factor es determinante en su cálculo?", 
-                        options: [
-                            "La antigüedad únicamente.",
-                            "La situación personal del trabajador.",
-                            "El número de días festivos.",
-                            "Los resultados o rendimiento alcanzado por el trabajador o la empresa."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "El principio de irrenunciabilidad de los derechos laborales implica que:", 
-                        options: [
-                            "El trabajador puede aceptar condiciones inferiores a las legales a cambio de incentivos.",
-                            "Las partes pueden pactar descuentos adicionales en el salario.",
-                            "Ningún trabajador puede renunciar a derechos fundamentales establecidos por la ley, aun mediante acuerdo individual.",
-                            "Los beneficios sociales son negociables libremente en el contrato."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "En un escenario de reestructuración empresarial, la protección de la Seguridad Social busca:", 
-                        options: [
-                            "Incrementar la carga contributiva de los trabajadores.",
-                            "Eliminar el pago de cotizaciones en casos especiales.",
-                            "Permitir acuerdos individuales para renunciar a prestaciones.",
-                            "Garantizar que, a pesar de cambios, se mantengan derechos mínimos de protección social."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cómo se determina la cuantía de la prestación por incapacidad temporal?", 
-                        options: [
-                            "Basándose únicamente en el salario base.",
-                            "Mediante un porcentaje fijo del salario neto.",
-                            "A partir de la base reguladora, que incluye la totalidad de las retribuciones integradas legalmente.",
-                            "Según el convenio colectivo sin referencia a la base de cotización."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "Las bonificaciones en las cuotas empresariales de la Seguridad Social tienen como objetivo:", 
-                        options: [
-                            "Incentivar la contratación y favorecer determinados colectivos o situaciones.",
-                            "Disminuir la competitividad de las empresas.",
-                            "Incrementar el salario bruto de los trabajadores.",
-                            "Eliminar la obligación de cotizar en determinados supuestos."
-                        ], 
-                        correct: 0
-                    },
-                    { 
-                        text: "En el contexto legal, ¿cuál es el efecto de integrar determinados complementos salariales en la base de cotización?", 
-                        options: [
-                            "Siempre incrementa la cuota a pagar por el empleador.",
-                            "Se traduce en una reducción automática del salario neto.",
-                            "Puede aumentar la protección del trabajador al elevar la base de cálculo de prestaciones, pero también la cuantía de las cotizaciones.",
-                            "No tiene ningún efecto en la protección social."
-                        ], 
-                        correct: 2
-                    },
-                    { 
-                        text: "El tratamiento fiscal del salario establece que:", 
-                        options: [
-                            "Todas las retribuciones, sin excepción, tributan al mismo tipo.",
-                            "Los complementos salariales no están sujetos a tributación.",
-                            "El salario bruto y neto son equivalentes para efectos fiscales.",
-                            "Existen ciertos límites y exenciones para retribuciones en especie y otros complementos."
-                        ], 
-                        correct: 3
-                    },
-                    { 
-                        text: "La actualización del salario mínimo interprofesional se basa en:", 
-                        options: [
-                            "En criterios sociales y económicos determinados por la ley, considerando la evolución de precios y otros indicadores.",
-                            "Únicamente en la productividad empresarial.",
-                            "La decisión unilateral del Ministerio de Trabajo.",
-                            "La negociación colectiva exclusiva de cada empresa."
-                        ], 
-                        correct: 0
-                    }
-                ]
-            },
-            // Exámenes IP (Vocabulario)
-            IPVocabulario: {
-                description: "Examen de vocabulario técnico en inglés.",
-                questions: [
-                    { 
-                        text: "¿Cuál es la traducción correcta de abolish?", 
-                        options: ["Conservar", "Establecer", "Abolir", "Mantener"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de mischief?", 
-                        options: ["Desorden", "Engaño", "Caos", "Travesura"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de cautious?", 
-                        options: ["Temeroso", "Imprudente", "Cauteloso", "Despreocupado"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de troubleshoot?", 
-                        options: ["Configurar redes", "Diagnosticar hardware", "Instalar programas", "Solucionar problemas"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de control panel?", 
-                        options: ["Teclado", "Monitor", "Unidad central", "Panel de control"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de loose connection?", 
-                        options: ["Conexión estable", "Conexión fija", "Conexión rápida", "Conexión suelta"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de no signal message?", 
-                        options: ["Mensaje de error", "Mensaje de bienvenida", "Mensaje de actualización", "Mensaje de 'sin señal'"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de power button?", 
-                        options: ["Botón de volumen", "Botón de reinicio", "Botón de inicio", "Botón de encendido"], 
-                        correct: 3
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de volume control?", 
-                        options: ["Control de brillo", "Control de sonido", "Control de volumen", "Control de energía"], 
-                        correct: 2
-                    },
-                    { 
-                        text: "¿Cuál es la traducción correcta de freeze (en el contexto de un proceso que deja de responder)?", 
-                        options: ["Reinicio", "Bloqueo", "Actualización", "Optimización"], 
+                        text: "¿Qué jurisprudencia se aplica a la movilidad funcional?", 
+                        options: ["Solo el Código Penal", "El Estatuto de los Trabajadores y doctrina del Tribunal Supremo", "Reglamento interno de empresa", "Código de Comercio"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Cuál es la traducción correcta de log off?", 
-                        options: ["Iniciar sesión", "Cerrar sesión", "Conectar", "Bloquear sesión"], 
+                        text: "¿Qué límite existe en movilidad funcional descendente?", 
+                        options: ["No puede existir", "Solo con acuerdo sindical", "Que no suponga perjuicio económico ni profesional", "Siempre es obligatoria"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué derechos se mantienen durante la suspensión por huelga legal?", 
+                        options: ["Derecho a salario", "Derecho a vacaciones", "Derecho a reincorporación", "Derecho a despido"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué debe probar el empleador para justificar una modificación sustancial?", 
+                        options: ["Su voluntad", "Opinión del trabajador", "Causa económica, técnica, organizativa o de producción", "Preferencia sindical"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál de estos derechos puede limitarse temporalmente durante una suspensión?", 
+                        options: ["Derecho a huelga", "Derecho a prestación salarial", "Derecho a antigüedad", "Derecho a vacaciones"], 
                         correct: 1
                     },
                     { 
-                        text: "¿Cuál es la traducción correcta de make sure?", 
-                        options: ["Descuidarse", "Confiar", "Olvidarse", "Asegurarse"], 
-                        correct: 3
+                        text: "¿Qué procedimiento se sigue para la suspensión por sanción disciplinaria?", 
+                        options: ["Ninguno", "Solo comunicación oral", "Debe comunicarse por escrito y estar justificada", "Se requiere juicio"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué ocurre si un traslado no se justifica legalmente?", 
+                        options: ["Es válido", "Se puede impugnar judicialmente", "Es automático", "No afecta al trabajador"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué tribunal tiene competencia en conflictos sobre modificaciones sustanciales?", 
+                        options: ["Constitucional", "Penal", "Social (laboral)", "Mercantil"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué plazo tiene el trabajador para impugnar una modificación sustancial?", 
+                        options: ["7 días", "15 días hábiles", "20 días hábiles", "30 días naturales"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué tipo de extinción requiere autorización administrativa previa?", 
+                        options: ["Renuncia", "Despido por causas objetivas", "Despido colectivo", "Jubilación del empresario"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuándo se entiende que un contrato está extinguido por mutuo acuerdo?", 
+                        options: ["Solo con firma del empleador", "Tras 15 días sin asistencia", "Cuando ambas partes lo pactan voluntariamente", "Cuando hay carta de despido"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Cuál es el efecto principal de la suspensión?", 
+                        options: ["Finaliza la relación laboral", "Suspende temporalmente obligaciones sin extinguir el contrato", "Concede indemnización", "Permite modificar salario"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Qué causa exige indemnización al extinguir un contrato?", 
+                        options: ["Renuncia", "Fallecimiento del trabajador", "Despido por causas objetivas", "Sanción disciplinaria"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué puede solicitar el trabajador ante una modificación injustificada?", 
+                        options: ["Ascenso", "Reducción de jornada", "Rescisión del contrato con indemnización", "Cambio de grupo profesional"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué figura protege al trabajador en situación de maternidad?", 
+                        options: ["Estatuto de los Consumidores", "Convenio Europeo de Trabajo", "Garantía de no despido", "Código Civil"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué contrato no se extingue aunque se suspenda por incapacidad?", 
+                        options: ["Temporal eventual", "Fijo discontinuo", "Indefinido", "En prácticas"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué documento es obligatorio en despidos por causas económicas?", 
+                        options: ["Nómina del último mes", "Informe de productividad", "Carta explicativa con causas", "Declaración jurada"], 
+                        correct: 2
+                    },
+                    { 
+                        text: "¿Qué efecto tiene una suspensión no comunicada adecuadamente?", 
+                        options: ["Es válida", "Es considerada nula", "Se convierte en despido", "No afecta"], 
+                        correct: 1
+                    },
+                    { 
+                        text: "¿Cuándo se considera improcedente un despido?", 
+                        options: ["Cuando no hay causa real ni procedimiento legal", "Cuando el trabajador no asiste", "Si hay huelga", "Cuando hay indemnización"], 
+                        correct: 0
+                    },
+                    { 
+                        text: "¿Qué efecto tiene la extinción por jubilación del empresario en una empresa unipersonal?", 
+                        options: ["La empresa continúa", "Se suspende el contrato", "Se extingue el contrato", "El contrato se transforma"], 
+                        correct: 2
                     }
                 ]
             }
         };
 
         // Variables globales
-        let currentExam = [];
-        let currentQuestionIndex = 0;
-        let userAnswers = [];
-        let pointsPerCorrect = 0;
-        let pointsPerIncorrect = 0;
-        let examResults = [];
-        let currentUser = null;
-        let loginPromptShown = false;
-
-        // Inicializar Google Sign-In
-        function initializeGoogleSignIn() {
-            google.accounts.id.initialize({
-                client_id: "683303431957-5r53be9ud54av50kboa1v9eg0c35eltj.apps.googleusercontent.com",
-                callback: handleGoogleSignIn
-            });
-            
-            // Renderizar el botón de Google en el menú de configuración
-            google.accounts.id.renderButton(
-                document.getElementById("googleLoginContainer"),
-                { 
-                    type: "standard",
-                    theme: "filled_blue",
-                    size: "medium",
-                    text: "signin_with",
-                    shape: "pill",
-                    logo_alignment: "left"
-                }
-            );
-            
-            // Actualizar estado de login
-            updateLoginStatus();
-        }
-
-        // Función para manejar el inicio de sesión con Google
-        function handleGoogleSignIn(response) {
-            const user = {
-                id: response.credential,
-                name: response.clientId,
-                email: response.client_id,
-                avatar: 'https://lh3.googleusercontent.com/a/default-user' // Avatar por defecto
-            };
-            
-            currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            // Mostrar información del usuario en el menú principal
-            document.getElementById('userAvatar').src = user.avatar;
-            document.getElementById('userName').textContent = user.name;
-            document.getElementById('userInfo').style.display = 'flex';
-            
-            // Actualizar estado de login en el menú de configuración
-            updateLoginStatus();
-            
-            // Cargar datos del usuario desde Firebase/Backend
-            loadUserData(user.id);
-        }
-
-        // Actualizar estado de login en el menú de configuración
-        function updateLoginStatus() {
-            const loginStatus = document.getElementById('loginStatus');
-            const googleLoginContainer = document.getElementById('googleLoginContainer');
-            
-            if (currentUser) {
-                loginStatus.style.display = 'block';
-                googleLoginContainer.style.display = 'none';
-            } else {
-                loginStatus.style.display = 'none';
-                googleLoginContainer.style.display = 'block';
-            }
-        }
-
-        // Función para cerrar sesión
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            
-            // Ocultar información del usuario en el menú principal
-            document.getElementById('userInfo').style.display = 'none';
-            
-            // Actualizar estado de login en el menú de configuración
-            updateLoginStatus();
-        }
-
-        // Función para cargar datos del usuario
-        function loadUserData(userId) {
-            // Aquí iría la conexión con Firebase o tu backend
-            // Por ahora simulamos una carga de datos
-            
-            // Verificar si hay datos guardados localmente para este usuario
-            const userData = localStorage.getItem(`userData_${userId}`);
-            if (userData) {
-                const data = JSON.parse(userData);
-                examResults = data.examResults || [];
-                
-                // Cargar configuración
-                if (data.settings) {
-                    document.getElementById('shuffleAnswers').checked = data.settings.shuffleAnswers;
-                    document.getElementById('themeSelect').value = data.settings.theme;
-                    applyTheme(data.settings.theme);
-                }
-                
-                updateResultsList();
-            }
-        }
-
-        // Función para guardar datos del usuario
-        function saveUserData() {
-            if (!currentUser) return;
-            
-            const userData = {
-                settings: {
-                    shuffleAnswers: document.getElementById('shuffleAnswers').checked,
-                    theme: document.getElementById('themeSelect').value
-                },
-                examResults: examResults
-            };
-            
-            // Aquí iría la conexión con Firebase o tu backend
-            // Por ahora guardamos localmente
-            localStorage.setItem(`userData_${currentUser.id}`, JSON.stringify(userData));
-        }
-
-        // Cargar configuración guardada al iniciar
-        function loadSettings() {
-            const savedSettings = localStorage.getItem('examSettings');
-            if (savedSettings) {
-                const settings = JSON.parse(savedSettings);
-                document.getElementById('shuffleAnswers').checked = settings.shuffleAnswers;
-                document.getElementById('themeSelect').value = settings.theme;
-                applyTheme(settings.theme);
-            } else {
-                // Configuración por defecto
-                document.getElementById('shuffleAnswers').checked = true;
-                document.getElementById('themeSelect').value = 'blue';
-                applyTheme('blue');
-                saveSettings();
-            }
-            
-            const savedResults = localStorage.getItem('examResults');
-            if (savedResults) {
-                examResults = JSON.parse(savedResults);
-                updateResultsList();
-            }
-        }
-
-        // Guardar configuración
-        function saveSettings() {
-            const settings = {
-                shuffleAnswers: document.getElementById('shuffleAnswers').checked,
-                theme: document.getElementById('themeSelect').value
-            };
-            localStorage.setItem('examSettings', JSON.stringify(settings));
-            saveUserData();
-        }
-
-        // Guardar resultados
-        function saveResults() {
-            localStorage.setItem('examResults', JSON.stringify(examResults));
-            saveUserData();
-        }
-
-        // Aplicar tema seleccionado
-        function applyTheme(theme) {
-            if (theme === 'dark') {
-                document.body.classList.add('dark-theme');
-            } else {
-                document.body.classList.remove('dark-theme');
-            }
-        }
-
-        // Restablecer configuración
-        function resetSettings() {
-            document.getElementById('shuffleAnswers').checked = true;
-            document.getElementById('themeSelect').value = 'blue';
-            applyTheme('blue');
-            saveSettings();
-        }
-
-        // Alternar menú de configuración con animación
-        function toggleConfigMenu() {
-            const menu = document.getElementById('configMenu');
-            const resultsMenu = document.getElementById('resultsMenu');
-            
-            // Cerrar menú de resultados si está abierto
-            if (resultsMenu.classList.contains('active')) {
-                resultsMenu.classList.add('closing');
-                setTimeout(() => {
-                    resultsMenu.classList.remove('active', 'closing');
-                }, 300);
-            }
-            
-            if (menu.classList.contains('active')) {
-                menu.classList.add('closing');
-                setTimeout(() => {
-                    menu.classList.remove('active', 'closing');
-                }, 300);
-            } else {
-                menu.classList.add('active');
-                menu.classList.remove('closing');
-            }
-        }
-
-        // Cerrar menú de configuración
-        function closeConfigMenu() {
-            const menu = document.getElementById('configMenu');
-            menu.classList.add('closing');
-            setTimeout(() => {
-                menu.classList.remove('active', 'closing');
-            }, 300);
-        }
-
-        // Alternar menú de resultados con animación
-        function toggleResultsMenu() {
-            const menu = document.getElementById('resultsMenu');
-            const configMenu = document.getElementById('configMenu');
-            
-            // Cerrar menú de configuración si está abierto
-            if (configMenu.classList.contains('active')) {
-                configMenu.classList.add('closing');
-                setTimeout(() => {
-                    configMenu.classList.remove('active', 'closing');
-                }, 300);
-            }
-            
-            if (menu.classList.contains('active')) {
-                menu.classList.add('closing');
-                setTimeout(() => {
-                    menu.classList.remove('active', 'closing');
-                }, 300);
-            } else {
-                menu.classList.add('active');
-                menu.classList.remove('closing');
-            }
-        }
-
-        // Cerrar menú de resultados
-        function closeResultsMenu() {
-            const menu = document.getElementById('resultsMenu');
-            menu.classList.add('closing');
-            setTimeout(() => {
-                menu.classList.remove('active', 'closing');
-            }, 300);
-        }
-
-        // Borrar todos los resultados
-        function clearAllResults() {
-            if (confirm("¿Estás seguro de que quieres borrar todos los resultados de exámenes? Esta acción no se puede deshacer.")) {
-                examResults = [];
-                localStorage.removeItem('examResults');
-                
-                // Si hay un usuario logueado, también borramos sus resultados
-                if (currentUser) {
-                    const userData = localStorage.getItem(`userData_${currentUser.id}`);
-                    if (userData) {
-                        const data = JSON.parse(userData);
-                        data.examResults = [];
-                        localStorage.setItem(`userData_${currentUser.id}`, JSON.stringify(data));
-                    }
-                }
-                
-                updateResultsList();
-                closeResultsMenu();
-            }
-        }
-
-        // Actualizar lista de resultados
-        function updateResultsList() {
-            const resultsList = document.getElementById('resultsList');
-            resultsList.innerHTML = '';
-            
-            if (examResults.length === 0) {
-                resultsList.innerHTML = '<div class="no-results">Aquí aparecerán los resultados de tus exámenes</div>';
-                return;
-            }
-            
-            examResults.forEach((result, index) => {
-                const examResult = document.createElement('div');
-                examResult.className = 'exam-result';
-                examResult.innerHTML = `
-                    <p><strong>${result.examName}</strong></p>
-                    <p>Nota: ${result.score}/10</p>
-                    <p>Fecha: ${new Date(result.timestamp).toLocaleString()}</p>
-                `;
-                examResult.onclick = () => showExamResult(index);
-                resultsList.appendChild(examResult);
-            });
-        }
-
-        // Mostrar resultado completo de un examen
-        function showExamResult(index) {
-            const result = examResults[index];
-            
-            // Limpiar resultados anteriores
-            document.getElementById('quizContainer').style.display = 'none';
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('loadingScreen').style.display = 'none';
-            
-            document.getElementById('score').innerText = `Tu nota fue: ${result.score}/10. Respuestas correctas: ${result.correctAnswers}/${result.totalQuestions}`;
-            
-            let summaryHTML = '';
-            result.questions.forEach((q, i) => {
-                if (q.userAnswer !== null) {
-                    if (q.userAnswer === q.correctAnswer) {
-                        summaryHTML += `<li class="correct-answer">✔️ Pregunta ${i + 1}: ${q.questionText}</li>`;
-                    } else {
-                        summaryHTML += `<li class="incorrect-answer">❌ Pregunta ${i + 1}: ${q.questionText}<br>
-                        <strong>Tu respuesta:</strong> ${q.options[q.userAnswer]}<br>
-                        <strong>Respuesta correcta:</strong> ${q.options[q.correctAnswer]}</li>`;
-                    }
-                } else {
-                    summaryHTML += `<li>🧻 Pregunta ${i + 1}: ${q.questionText}<br>
-                    <strong>No respondida</strong><br>
-                    <strong>Respuesta correcta:</strong> ${q.options[q.correctAnswer]}</li>`;
-                }
-            });
-            
-            document.getElementById('summary').innerHTML = summaryHTML;
-            closeResultsMenu();
-        }
-
-        // Mezclar array
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        // Seleccionar preguntas aleatorias
-        function selectRandomQuestions(examKey) {
-            const examData = exams[examKey];
-            const allQuestions = [...examData.questions];
-            shuffleArray(allQuestions);
-            return allQuestions.slice(0, 12);
-        }
-
-        // Cargar categoría con animación
-        function loadCategory(category) {
-            document.getElementById("examMenu").style.display = "none";
-            document.querySelectorAll(".category-menu").forEach(menu => {
-                menu.style.display = "none";
-            });
-            document.getElementById(category).style.display = "block";
-            document.getElementById(category).classList.add("active");
-        }
-
-        // Volver al menú principal con animación
-        function backToMainMenu() {
-            const activeMenu = document.querySelector('.category-menu.active');
-            if (activeMenu) {
-                activeMenu.classList.add('closing');
-                setTimeout(() => {
-                    activeMenu.style.display = 'none';
-                    activeMenu.classList.remove('active', 'closing');
-                    document.getElementById("examMenu").style.display = "block";
-                    document.getElementById("examMenu").style.animation = 'fadeIn 0.5s ease';
-                }, 300);
-            }
-        }
-
-        // Volver al menú de categoría con animación
-        function backToCategoryMenu() {
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("quizContainer").style.display = "none";
-            
-            const resultDiv = document.getElementById("result");
-            resultDiv.style.animation = 'shrinkAnimation 0.3s ease forwards';
-            setTimeout(() => {
-                resultDiv.style.display = "none";
-                resultDiv.style.animation = '';
-                document.querySelector(".category-menu.active").style.display = "block";
-                document.querySelector('.container').style.animation = 'slideIn 0.5s ease';
-            }, 300);
-        }
-
-        // Cargar examen
-        function loadExam(examKey) {
-            const examData = exams[examKey];
-            currentExam = examKey.includes('SOM') ? [...examData.questions] : selectRandomQuestions(examKey);
-            
-            // Mezclar respuestas si está habilitado
-            if (document.getElementById('shuffleAnswers').checked) {
-                currentExam.forEach(q => {
-                    // Guardar la respuesta correcta antes de mezclar
-                    const correctAnswer = q.options[q.correct];
-                    shuffleArray(q.options);
-                    // Actualizar el índice de la respuesta correcta después de mezclar
-                    q.correct = q.options.indexOf(correctAnswer);
-                });
-            }
-            
-            userAnswers = new Array(currentExam.length).fill(null);
-            pointsPerCorrect = (10 / currentExam.length).toFixed(2);
-            pointsPerIncorrect = (5 / currentExam.length).toFixed(2);
-
-            document.getElementById("totalQuestions").innerText = currentExam.length;
-            document.getElementById("pointsPerCorrect").innerText = pointsPerCorrect;
-            document.getElementById("pointsPerIncorrect").innerText = pointsPerIncorrect;
-            document.getElementById("examDescription").innerText = examData.description;
-
-            document.getElementById("examMenu").style.display = "none";
-            document.querySelectorAll(".category-menu").forEach(menu => {
-                menu.style.display = "none";
-            });
-            document.getElementById("startScreen").style.display = "block";
-        }
-
-        // Iniciar examen
-        function startExam() {
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("quizContainer").style.display = "block";
-            updateProgressBar();
-            loadQuestion(currentQuestionIndex);
-            document.querySelector('.container').style.animation = 'expandAnimation 0.5s ease';
-        }
-
-        // Cargar pregunta
-        function loadQuestion(index) {
-            const questionContainer = document.getElementById("questions");
-            questionContainer.innerHTML = "";
-            
-            if (index < currentExam.length) {
-                const q = currentExam[index];
-                const div = document.createElement("div");
-                div.className = "question-container";
-                div.innerHTML = `<p><strong>${index + 1}. ${q.text}</strong></p>` +
-                    q.options.map((option, i) =>
-                        `<label><input type="radio" name="q${index}" value="${i}" ${userAnswers[index] === i ? "checked" : ""} onclick="toggleAnswer(${index}, ${i})"> ${option}</label><br>`
-                    ).join("");
-                questionContainer.appendChild(div);
-                div.style.display = "block";
-            }
-            
-            document.getElementById("prevButton").disabled = index === 0;
-            document.getElementById("nextButton").innerText = index === currentExam.length - 1 ? "Finalizar" : "Siguiente";
-        }
-
-        // Alternar respuesta (permite desmarcar haciendo clic nuevamente)
-        function toggleAnswer(questionIndex, optionIndex) {
-            if (userAnswers[questionIndex] === optionIndex) {
-                userAnswers[questionIndex] = null; // Desmarcar si ya estaba seleccionada
-            } else {
-                userAnswers[questionIndex] = optionIndex; // Marcar la respuesta
-            }
-            // Actualizar visualmente el estado del radio button
-            const radioInput = document.querySelector(`input[name='q${questionIndex}'][value='${optionIndex}']`);
-            if (radioInput) {
-                radioInput.checked = (userAnswers[questionIndex] === optionIndex);
-            }
-        }
-
-        // Guardar respuesta
-        function saveAnswer(index) {
-            const selected = document.querySelector(`input[name='q${index}']:checked`);
-            if (selected) {
-                userAnswers[index] = parseInt(selected.value);
-            }
-        }
-
-        // Siguiente pregunta
-        function nextQuestion() {
-            saveAnswer(currentQuestionIndex);
-            if (currentQuestionIndex < currentExam.length - 1) {
-                currentQuestionIndex++;
-                loadQuestion(currentQuestionIndex);
-                updateProgressBar();
-            } else {
-                showLoadingScreen();
-            }
-        }
-
-        // Pregunta anterior
-        function prevQuestion() {
-            saveAnswer(currentQuestionIndex);
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                loadQuestion(currentQuestionIndex);
-                updateProgressBar();
-            }
-        }
-
-        // Mostrar pantalla de carga
-        function showLoadingScreen() {
-            document.getElementById("quizContainer").style.display = "none";
-            document.getElementById("loadingScreen").style.display = "block";
-
-            const messages = [
-                "Cargando resultados, por favor espere...",
-                "Procesando respuestas...",
-                "Generando estadísticas...",
-                "Finalizando..."
-            ];
-
-            const progressBar = document.querySelector("#loadingScreen .progress-bar .progress");
-            const messagesElement = document.querySelector("#loadingScreen .messages");
-
-            let progress = 0;
-            let messageIndex = 0;
-
-            const interval = setInterval(() => {
-                progress += Math.random() * 10;
-                progressBar.style.width = `${Math.min(progress, 100)}%`;
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        showResults();
-                    }, 2000);
-                } else if (progress % 25 === 0) {
-                    messagesElement.textContent = messages[messageIndex];
-                    messageIndex = (messageIndex + 1) % messages.length;
-                }
-            }, 800);
-        }
-
-        // Mostrar resultados
-        function showResults() {
-            document.getElementById("loadingScreen").style.display = "none";
-            document.getElementById("result").style.display = "block";
-
-            let correctAnswers = 0;
-            let wrongAnswers = 0;
-            let summaryHTML = "";
-            
-            // Preparar datos para guardar en el historial
-            const resultData = {
-                examName: document.getElementById("examDescription").textContent,
-                timestamp: Date.now(),
-                totalQuestions: currentExam.length,
-                correctAnswers: 0,
-                score: 0,
-                questions: []
-            };
-            
-            currentExam.forEach((q, index) => {
-                const answer = userAnswers[index];
-                const questionData = {
-                    questionText: q.text,
-                    options: [...q.options],
-                    userAnswer: answer,
-                    correctAnswer: q.correct
-                };
-                
-                if (answer !== null) {
-                    if (answer === q.correct) {
-                        correctAnswers++;
-                        summaryHTML += `<li class="correct-answer">✔️ Pregunta ${index + 1}: ${q.text}</li>`;
-                    } else {
-                        wrongAnswers++;
-                        summaryHTML += `<li class="incorrect-answer">❌ Pregunta ${index + 1}: ${q.text}<br>
-                        <strong>Tu respuesta:</strong> ${q.options[answer]}<br>
-                        <strong>Respuesta correcta:</strong> ${q.options[q.correct]}</li>`;
-                    }
-                } else {
-                    summaryHTML += `<li>🧻 Pregunta ${index + 1}: ${q.text}<br>
-                    <strong>No respondida</strong><br>
-                    <strong>Respuesta correcta:</strong> ${q.options[q.correct]}</li>`;
-                }
-                
-                resultData.questions.push(questionData);
-            });
-            
-            // Cambio importante aquí: Permitir notas negativas eliminando Math.max(0, ...)
-            let score = (10 / currentExam.length) * correctAnswers - (5 / currentExam.length) * wrongAnswers;
-            score = score.toFixed(2); // Ahora permite valores negativos
-            
-            resultData.correctAnswers = correctAnswers;
-            resultData.score = score;
-            
-            // Guardar resultado en el historial
-            examResults.unshift(resultData);
-            if (examResults.length > 10) {
-                examResults = examResults.slice(0, 10); // Mantener solo los 10 últimos resultados
-            }
-            saveResults();
-            updateResultsList();
-            
-            document.getElementById("score").innerText = `Tu nota es: ${score}/10. Respuestas correctas: ${correctAnswers}/${currentExam.length}`;
-            document.getElementById("summary").innerHTML = summaryHTML;
-        }
-
-        // Actualizar barra de progreso
-        function updateProgressBar() {
-            const progress = ((currentQuestionIndex + 1) / currentExam.length) * 100;
-            document.getElementById("progress").style.width = `${progress}%`;
-        }
-
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            
-            // Verificar si hay un usuario logueado
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                document.getElementById('userAvatar').src = currentUser.avatar || 'https://lh3.googleusercontent.com/a/default-user';
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userInfo').style.display = 'flex';
-                loadUserData(currentUser.id);
-            } else {
-                document.getElementById('userInfo').style.display = 'none';
-            }
-            
-            document.getElementById('configButton').addEventListener('click', toggleConfigMenu);
-            document.getElementById('resultsButton').addEventListener('click', toggleResultsMenu);
-            
-            document.getElementById('themeSelect').addEventListener('change', (e) => {
-                applyTheme(e.target.value);
-                saveSettings();
-            });
-            
-            document.getElementById('shuffleAnswers').addEventListener('change', saveSettings);
-            
-            // Inicializar Google Sign-In después de que cargue la librería
-            setTimeout(() => {
-                if (typeof google !== 'undefined') {
-                    initializeGoogleSignIn();
-                }
-            }, 1000);
-        });
-    </script>
-</body>
-</html>
+        
