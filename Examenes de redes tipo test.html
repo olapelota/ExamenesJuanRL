@@ -2352,5 +2352,660 @@
             }
         };
 
-        // Variables globales
-        
+        // Variables globales (por actualizar)
+                let currentExam = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let pointsPerCorrect = 0;
+        let pointsPerIncorrect = 0;
+        let examResults = [];
+        let currentUser = null;
+        let loginPromptShown = false;
+
+        // Inicializar Google Sign-In
+        function initializeGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: "683303431957-5r53be9ud54av50kboa1v9eg0c35eltj.apps.googleusercontent.com",
+                callback: handleGoogleSignIn
+            });
+            
+            // Renderizar el botón de Google en el menú de configuración
+            google.accounts.id.renderButton(
+                document.getElementById("googleLoginContainer"),
+                { 
+                    type: "standard",
+                    theme: "filled_blue",
+                    size: "medium",
+                    text: "signin_with",
+                    shape: "pill",
+                    logo_alignment: "left"
+                }
+            );
+            
+            // Actualizar estado de login
+            updateLoginStatus();
+        }
+
+        // Función para manejar el inicio de sesión con Google
+        function handleGoogleSignIn(response) {
+            // Mostrar prompt para nombre de usuario
+            const username = prompt("Por favor, ingresa un nombre de usuario (máximo 20 caracteres):");
+            
+            if (!username) {
+                logout(); // Cancelar inicio de sesión si no se proporciona nombre
+                return;
+            }
+            
+            // Validar longitud del nombre de usuario
+            const trimmedUsername = username.trim().substring(0, 20);
+            
+            const user = {
+                id: response.credential,
+                name: trimmedUsername,
+                email: response.client_id,
+                avatar: 'https://lh3.googleusercontent.com/a/default-user' // Avatar por defecto
+            };
+            
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Mostrar información del usuario en el menú principal
+            document.getElementById('userAvatar').src = user.avatar;
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userInfo').style.display = 'flex';
+            
+            // Actualizar estado de login en el menú de configuración
+            updateLoginStatus();
+            
+            // Cargar datos del usuario desde localStorage
+            loadUserData(user.id);
+            
+            // Mostrar mensaje de bienvenida
+            alert(`Bienvenido, ${trimmedUsername}!`);
+        }
+
+        // Actualizar estado de login en el menú de configuración
+        function updateLoginStatus() {
+            const loginStatus = document.getElementById('loginStatus');
+            const googleLoginContainer = document.getElementById('googleLoginContainer');
+            
+            if (currentUser) {
+                loginStatus.style.display = 'block';
+                googleLoginContainer.style.display = 'none';
+            } else {
+                loginStatus.style.display = 'none';
+                googleLoginContainer.style.display = 'block';
+            }
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            // Guardar datos antes de cerrar sesión
+            if (currentUser) {
+                saveUserData();
+            }
+            
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            
+            // Ocultar información del usuario en el menú principal
+            document.getElementById('userInfo').style.display = 'none';
+            
+            // Actualizar estado de login en el menú de configuración
+            updateLoginStatus();
+            
+            // Cargar resultados locales si existen
+            const savedResults = localStorage.getItem('examResults');
+            if (savedResults) {
+                examResults = JSON.parse(savedResults);
+                updateResultsList();
+            }
+        }
+
+        // Función para cargar datos del usuario
+        function loadUserData(userId) {
+            // Verificar si hay datos guardados localmente para este usuario
+            const userData = localStorage.getItem(`userData_${userId}`);
+            if (userData) {
+                const data = JSON.parse(userData);
+                examResults = data.examResults || [];
+                
+                // Cargar configuración
+                if (data.settings) {
+                    document.getElementById('shuffleAnswers').checked = data.settings.shuffleAnswers;
+                    document.getElementById('themeSelect').value = data.settings.theme;
+                    applyTheme(data.settings.theme);
+                }
+                
+                updateResultsList();
+            } else {
+                // Si no hay datos, inicializar con valores por defecto
+                examResults = [];
+                saveUserData();
+            }
+        }
+
+        // Función para guardar datos del usuario
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            const userData = {
+                settings: {
+                    shuffleAnswers: document.getElementById('shuffleAnswers').checked,
+                    theme: document.getElementById('themeSelect').value
+                },
+                examResults: examResults
+            };
+            
+            localStorage.setItem(`userData_${currentUser.id}`, JSON.stringify(userData));
+            
+            // También guardar en localStorage general para persistencia
+            localStorage.setItem('examSettings', JSON.stringify(userData.settings));
+            localStorage.setItem('examResults', JSON.stringify(examResults));
+        }
+
+        // Cargar configuración guardada al iniciar
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('examSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('shuffleAnswers').checked = settings.shuffleAnswers;
+                document.getElementById('themeSelect').value = settings.theme;
+                applyTheme(settings.theme);
+            } else {
+                // Configuración por defecto
+                document.getElementById('shuffleAnswers').checked = true;
+                document.getElementById('themeSelect').value = 'blue';
+                applyTheme('blue');
+                saveSettings();
+            }
+            
+            // Cargar resultados locales si no hay usuario logueado
+            if (!currentUser) {
+                const savedResults = localStorage.getItem('examResults');
+                if (savedResults) {
+                    examResults = JSON.parse(savedResults);
+                    updateResultsList();
+                }
+            }
+        }
+
+        // Guardar configuración
+        function saveSettings() {
+            const settings = {
+                shuffleAnswers: document.getElementById('shuffleAnswers').checked,
+                theme: document.getElementById('themeSelect').value
+            };
+            localStorage.setItem('examSettings', JSON.stringify(settings));
+            saveUserData();
+        }
+
+        // Guardar resultados
+        function saveResults() {
+            localStorage.setItem('examResults', JSON.stringify(examResults));
+            saveUserData();
+        }
+
+        // Aplicar tema seleccionado
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+
+        // Restablecer configuración
+        function resetSettings() {
+            document.getElementById('shuffleAnswers').checked = true;
+            document.getElementById('themeSelect').value = 'blue';
+            applyTheme('blue');
+            saveSettings();
+        }
+
+        // Alternar menú de configuración con animación
+        function toggleConfigMenu() {
+            const menu = document.getElementById('configMenu');
+            const resultsMenu = document.getElementById('resultsMenu');
+            
+            // Cerrar menú de resultados si está abierto
+            if (resultsMenu.classList.contains('active')) {
+                resultsMenu.classList.add('closing');
+                setTimeout(() => {
+                    resultsMenu.classList.remove('active', 'closing');
+                }, 300);
+            }
+            
+            if (menu.classList.contains('active')) {
+                menu.classList.add('closing');
+                setTimeout(() => {
+                    menu.classList.remove('active', 'closing');
+                }, 300);
+            } else {
+                menu.classList.add('active');
+                menu.classList.remove('closing');
+            }
+        }
+
+        // Cerrar menú de configuración
+        function closeConfigMenu() {
+            const menu = document.getElementById('configMenu');
+            menu.classList.add('closing');
+            setTimeout(() => {
+                menu.classList.remove('active', 'closing');
+            }, 300);
+        }
+
+        // Alternar menú de resultados con animación
+        function toggleResultsMenu() {
+            const menu = document.getElementById('resultsMenu');
+            const configMenu = document.getElementById('configMenu');
+            
+            // Cerrar menú de configuración si está abierto
+            if (configMenu.classList.contains('active')) {
+                configMenu.classList.add('closing');
+                setTimeout(() => {
+                    configMenu.classList.remove('active', 'closing');
+                }, 300);
+            }
+            
+            if (menu.classList.contains('active')) {
+                menu.classList.add('closing');
+                setTimeout(() => {
+                    menu.classList.remove('active', 'closing');
+                }, 300);
+            } else {
+                menu.classList.add('active');
+                menu.classList.remove('closing');
+            }
+        }
+
+        // Cerrar menú de resultados
+        function closeResultsMenu() {
+            const menu = document.getElementById('resultsMenu');
+            menu.classList.add('closing');
+            setTimeout(() => {
+                menu.classList.remove('active', 'closing');
+            }, 300);
+        }
+
+        // Borrar todos los resultados
+        function clearAllResults() {
+            if (confirm("¿Estás seguro de que quieres borrar todos los resultados de exámenes? Esta acción no se puede deshacer.")) {
+                examResults = [];
+                
+                // Borrar resultados según el contexto (usuario logueado o no)
+                if (currentUser) {
+                    const userData = localStorage.getItem(`userData_${currentUser.id}`);
+                    if (userData) {
+                        const data = JSON.parse(userData);
+                        data.examResults = [];
+                        localStorage.setItem(`userData_${currentUser.id}`, JSON.stringify(data));
+                    }
+                } else {
+                    localStorage.removeItem('examResults');
+                }
+                
+                updateResultsList();
+                closeResultsMenu();
+            }
+        }
+
+        // Actualizar lista de resultados
+        function updateResultsList() {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            if (examResults.length === 0) {
+                resultsList.innerHTML = '<div class="no-results">Aquí aparecerán los resultados de tus exámenes</div>';
+                return;
+            }
+            
+            examResults.forEach((result, index) => {
+                const examResult = document.createElement('div');
+                examResult.className = 'exam-result';
+                examResult.innerHTML = `
+                    <p><strong>${result.examName}</strong></p>
+                    <p>Nota: ${result.score}/10</p>
+                    <p>Fecha: ${new Date(result.timestamp).toLocaleString()}</p>
+                `;
+                examResult.onclick = () => showExamResult(index);
+                resultsList.appendChild(examResult);
+            });
+        }
+
+        // Mostrar resultado completo de un examen
+        function showExamResult(index) {
+            const result = examResults[index];
+            
+            // Limpiar resultados anteriores
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('loadingScreen').style.display = 'none';
+            
+            document.getElementById('score').innerText = `Tu nota fue: ${result.score}/10. Respuestas correctas: ${result.correctAnswers}/${result.totalQuestions}`;
+            
+            let summaryHTML = '';
+            result.questions.forEach((q, i) => {
+                if (q.userAnswer !== null) {
+                    if (q.userAnswer === q.correctAnswer) {
+                        summaryHTML += `<li class="correct-answer">✔️ Pregunta ${i + 1}: ${q.questionText}</li>`;
+                    } else {
+                        summaryHTML += `<li class="incorrect-answer">❌ Pregunta ${i + 1}: ${q.questionText}<br>
+                        <strong>Tu respuesta:</strong> ${q.options[q.userAnswer]}<br>
+                        <strong>Respuesta correcta:</strong> ${q.options[q.correctAnswer]}</li>`;
+                    }
+                } else {
+                    summaryHTML += `<li>🧻 Pregunta ${i + 1}: ${q.questionText}<br>
+                    <strong>No respondida</strong><br>
+                    <strong>Respuesta correcta:</strong> ${q.options[q.correctAnswer]}</li>`;
+                }
+            });
+            
+            document.getElementById('summary').innerHTML = summaryHTML;
+            closeResultsMenu();
+        }
+
+        // Mezclar array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Seleccionar preguntas aleatorias
+        function selectRandomQuestions(examKey) {
+            const examData = exams[examKey];
+            const allQuestions = [...examData.questions];
+            shuffleArray(allQuestions);
+            return allQuestions.slice(0, 12);
+        }
+
+        // Cargar categoría con animación
+        function loadCategory(category) {
+            document.getElementById("examMenu").style.display = "none";
+            document.querySelectorAll(".category-menu").forEach(menu => {
+                menu.style.display = "none";
+            });
+            document.getElementById(category).style.display = "block";
+            document.getElementById(category).classList.add("active");
+        }
+
+        // Volver al menú principal con animación
+        function backToMainMenu() {
+            const activeMenu = document.querySelector('.category-menu.active');
+            if (activeMenu) {
+                activeMenu.classList.add('closing');
+                setTimeout(() => {
+                    activeMenu.style.display = 'none';
+                    activeMenu.classList.remove('active', 'closing');
+                    document.getElementById("examMenu").style.display = "block";
+                    document.getElementById("examMenu").style.animation = 'fadeIn 0.5s ease';
+                }, 300);
+            }
+        }
+
+        // Volver al menú de categoría con animación
+        function backToCategoryMenu() {
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("quizContainer").style.display = "none";
+            
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.animation = 'shrinkAnimation 0.3s ease forwards';
+            setTimeout(() => {
+                resultDiv.style.display = "none";
+                resultDiv.style.animation = '';
+                document.querySelector(".category-menu.active").style.display = "block";
+                document.querySelector('.container').style.animation = 'slideIn 0.5s ease';
+            }, 300);
+        }
+
+        // Cargar examen
+        function loadExam(examKey) {
+            const examData = exams[examKey];
+            currentExam = examKey.includes('SOM') ? [...examData.questions] : selectRandomQuestions(examKey);
+            
+            // Mezclar respuestas si está habilitado
+            if (document.getElementById('shuffleAnswers').checked) {
+                currentExam.forEach(q => {
+                    // Guardar la respuesta correcta antes de mezclar
+                    const correctAnswer = q.options[q.correct];
+                    shuffleArray(q.options);
+                    // Actualizar el índice de la respuesta correcta después de mezclar
+                    q.correct = q.options.indexOf(correctAnswer);
+                });
+            }
+            
+            userAnswers = new Array(currentExam.length).fill(null);
+            pointsPerCorrect = (10 / currentExam.length).toFixed(2);
+            pointsPerIncorrect = (5 / currentExam.length).toFixed(2);
+
+            document.getElementById("totalQuestions").innerText = currentExam.length;
+            document.getElementById("pointsPerCorrect").innerText = pointsPerCorrect;
+            document.getElementById("pointsPerIncorrect").innerText = pointsPerIncorrect;
+            document.getElementById("examDescription").innerText = examData.description;
+
+            document.getElementById("examMenu").style.display = "none";
+            document.querySelectorAll(".category-menu").forEach(menu => {
+                menu.style.display = "none";
+            });
+            document.getElementById("startScreen").style.display = "block";
+        }
+
+        // Iniciar examen
+        function startExam() {
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("quizContainer").style.display = "block";
+            updateProgressBar();
+            loadQuestion(currentQuestionIndex);
+            document.querySelector('.container').style.animation = 'expandAnimation 0.5s ease';
+        }
+
+        // Cargar pregunta
+        function loadQuestion(index) {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            
+            if (index < currentExam.length) {
+                const q = currentExam[index];
+                const div = document.createElement("div");
+                div.className = "question-container";
+                div.innerHTML = `<p><strong>${index + 1}. ${q.text}</strong></p>` +
+                    q.options.map((option, i) =>
+                        `<label><input type="radio" name="q${index}" value="${i}" ${userAnswers[index] === i ? "checked" : ""} onclick="toggleAnswer(${index}, ${i})"> ${option}</label><br>`
+                    ).join("");
+                questionContainer.appendChild(div);
+                div.style.display = "block";
+            }
+            
+            document.getElementById("prevButton").disabled = index === 0;
+            document.getElementById("nextButton").innerText = index === currentExam.length - 1 ? "Finalizar" : "Siguiente";
+        }
+
+        // Alternar respuesta (permite desmarcar haciendo clic nuevamente)
+        function toggleAnswer(questionIndex, optionIndex) {
+            if (userAnswers[questionIndex] === optionIndex) {
+                userAnswers[questionIndex] = null; // Desmarcar si ya estaba seleccionada
+            } else {
+                userAnswers[questionIndex] = optionIndex; // Marcar la respuesta
+            }
+            // Actualizar visualmente el estado del radio button
+            const radioInput = document.querySelector(`input[name='q${questionIndex}'][value='${optionIndex}']`);
+            if (radioInput) {
+                radioInput.checked = (userAnswers[questionIndex] === optionIndex);
+            }
+        }
+
+        // Guardar respuesta
+        function saveAnswer(index) {
+            const selected = document.querySelector(`input[name='q${index}']:checked`);
+            if (selected) {
+                userAnswers[index] = parseInt(selected.value);
+            }
+        }
+
+        // Siguiente pregunta
+        function nextQuestion() {
+            saveAnswer(currentQuestionIndex);
+            if (currentQuestionIndex < currentExam.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+                updateProgressBar();
+            } else {
+                showLoadingScreen();
+            }
+        }
+
+        // Pregunta anterior
+        function prevQuestion() {
+            saveAnswer(currentQuestionIndex);
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+                updateProgressBar();
+            }
+        }
+
+        // Mostrar pantalla de carga
+        function showLoadingScreen() {
+            document.getElementById("quizContainer").style.display = "none";
+            document.getElementById("loadingScreen").style.display = "block";
+
+            const messages = [
+                "Cargando resultados, por favor espere...",
+                "Procesando respuestas...",
+                "Generando estadísticas...",
+                "Finalizando..."
+            ];
+
+            const progressBar = document.querySelector("#loadingScreen .progress-bar .progress");
+            const messagesElement = document.querySelector("#loadingScreen .messages");
+
+            let progress = 0;
+            let messageIndex = 0;
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                progressBar.style.width = `${Math.min(progress, 100)}%`;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        showResults();
+                    }, 2000);
+                } else if (progress % 25 === 0) {
+                    messagesElement.textContent = messages[messageIndex];
+                    messageIndex = (messageIndex + 1) % messages.length;
+                }
+            }, 800);
+        }
+
+        // Mostrar resultados
+        function showResults() {
+            document.getElementById("loadingScreen").style.display = "none";
+            document.getElementById("result").style.display = "block";
+
+            let correctAnswers = 0;
+            let wrongAnswers = 0;
+            let summaryHTML = "";
+            
+            // Preparar datos para guardar en el historial
+            const resultData = {
+                examName: document.getElementById("examDescription").textContent,
+                timestamp: Date.now(),
+                totalQuestions: currentExam.length,
+                correctAnswers: 0,
+                score: 0,
+                questions: []
+            };
+            
+            currentExam.forEach((q, index) => {
+                const answer = userAnswers[index];
+                const questionData = {
+                    questionText: q.text,
+                    options: [...q.options],
+                    userAnswer: answer,
+                    correctAnswer: q.correct
+                };
+                
+                if (answer !== null) {
+                    if (answer === q.correct) {
+                        correctAnswers++;
+                        summaryHTML += `<li class="correct-answer">✔️ Pregunta ${index + 1}: ${q.text}</li>`;
+                    } else {
+                        wrongAnswers++;
+                        summaryHTML += `<li class="incorrect-answer">❌ Pregunta ${index + 1}: ${q.text}<br>
+                        <strong>Tu respuesta:</strong> ${q.options[answer]}<br>
+                        <strong>Respuesta correcta:</strong> ${q.options[q.correct]}</li>`;
+                    }
+                } else {
+                    summaryHTML += `<li>🧻 Pregunta ${index + 1}: ${q.text}<br>
+                    <strong>No respondida</strong><br>
+                    <strong>Respuesta correcta:</strong> ${q.options[q.correct]}</li>`;
+                }
+                
+                resultData.questions.push(questionData);
+            });
+            
+            // Cambio importante aquí: Permitir notas negativas eliminando Math.max(0, ...)
+            let score = (10 / currentExam.length) * correctAnswers - (5 / currentExam.length) * wrongAnswers;
+            score = score.toFixed(2); // Ahora permite valores negativos
+            
+            resultData.correctAnswers = correctAnswers;
+            resultData.score = score;
+            
+            // Guardar resultado en el historial
+            examResults.unshift(resultData);
+            if (examResults.length > 10) {
+                examResults = examResults.slice(0, 10); // Mantener solo los 10 últimos resultados
+            }
+            saveResults();
+            updateResultsList();
+            
+            document.getElementById("score").innerText = `Tu nota es: ${score}/10. Respuestas correctas: ${correctAnswers}/${currentExam.length}`;
+            document.getElementById("summary").innerHTML = summaryHTML;
+        }
+
+        // Actualizar barra de progreso
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / currentExam.length) * 100;
+            document.getElementById("progress").style.width = `${progress}%`;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            
+            // Verificar si hay un usuario logueado
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('userAvatar').src = currentUser.avatar || 'https://lh3.googleusercontent.com/a/default-user';
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userInfo').style.display = 'flex';
+                loadUserData(currentUser.id);
+            } else {
+                document.getElementById('userInfo').style.display = 'none';
+            }
+            
+            document.getElementById('configButton').addEventListener('click', toggleConfigMenu);
+            document.getElementById('resultsButton').addEventListener('click', toggleResultsMenu);
+            
+            document.getElementById('themeSelect').addEventListener('change', (e) => {
+                applyTheme(e.target.value);
+                saveSettings();
+            });
+            
+            document.getElementById('shuffleAnswers').addEventListener('change', saveSettings);
+            
+            // Inicializar Google Sign-In después de que cargue la librería
+            setTimeout(() => {
+                if (typeof google !== 'undefined') {
+                    initializeGoogleSignIn();
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
